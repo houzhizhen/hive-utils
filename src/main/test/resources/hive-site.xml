@@ -1,0 +1,424 @@
+<configuration>
+  <!-- metastore start -->
+  <property>
+    <name>javax.jdo.option.ConnectionUserName</name>
+    <value>root</value>
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionPassword</name>
+    <value>houZZ@baidu1</value>
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>com.mysql.cj.jdbc.Driver</value>
+    </property>
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:mysql://localhost/metastore?useUnicode=true&amp;characterEncoding=utf8</value>
+  </property>
+  <property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://localhost:9083</value>
+    <description>Thrift URI for the remote metastore. Used by metastore client to connect to remote metastore.</description>
+  </property>
+
+   <property>
+    <name>hive.metastore.uri.selection</name>
+    <value>RANDOM</value>
+    <description>
+      Expects one of [sequential, random].
+      Determines the selection mechanism used by metastore client to connect to remote metastore.  SEQUENTIAL implies that the first valid metastore from the URIs specified as part of hive.metastore.uris will be picked.  RANDOM implies that the metastore will be picked randomly
+    </description>
+  </property>
+  
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>/user/hive/warehouse</value>
+    <description>location of default database for the warehouse</description>
+  </property>
+  <!-- metastore end -->
+
+  <!-- Security start -->
+  <property>
+    <name>hive.security.authorization.enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>hive.server2.enable.doAs</name>
+    <value>false</value>
+  </property>
+ 
+ <!-- Security end -->
+
+  <property>
+    <name>hive.users.in.admin.role</name>
+    <value>houzhizhen,admin</value>
+    <description>
+      Comma separated list of users who are in admin role for bootstrapping.
+      More users can be added in ADMIN role later.
+    </description>
+  </property>
+
+  <property>
+    <name>hive.execution.engine</name>
+    <value>mr</value>
+  </property>
+  
+  <property>
+    <name>hive.exec.stagingdir</name>
+    <value>.hive-staging</value>
+    <description>Directory name that will be created inside table locations in order to support HDFS encryption. This is replaces ${hive.exec.scratchdir} for query results with the exception of read-only tables. In all cases ${hive.exec.scratchdir} is still used for other temporary files, such as job plans.</description>
+  </property>
+  <property>
+    <name>hive.exec.scratchdir</name>
+    <value>/tmp/hive</value>
+    <description>HDFS root scratch dir for Hive jobs which gets created with write all (733) permission. For each connecting user, an HDFS scratch dir: ${hive.exec.scratchdir}/&lt;username&gt; is created, with ${hive.scratch.dir.permission}.</description>
+  </property>
+
+  <!-- HA -->
+  <property>
+    <name>hive.zookeeper.quorum</name>
+    <value>localhost:2181</value>
+  </property>
+  
+  <property>
+    <name>hive.server2.support.dynamic.service.discovery</name>
+    <value>true</value>
+    <description>Whether HiveServer2 supports dynamic service discovery for its clients. To support this, each instance of HiveServer2 currently uses ZooKeeper to register itself, when it is brought up. JDBC/ODBC clients should use the ZooKeeper ensemble: hive.zookeeper.quorum in their connection string.</description>
+  </property>
+
+  <property>
+    <name>hive.server2.zookeeper.namespace</name>
+    <value>hiveserver2</value>
+    <description>The parent node in ZooKeeper used by HiveServer2 when supporting dynamic service discovery.</description>
+  </property>
+  <!-- HA end -->
+  <property>
+    <name>hive.optimize.sort.dynamic.partition</name>
+    <value>true</value>
+    <description>
+      When enabled dynamic partitioning column will be globally sorted.
+      This way we can keep only one record writer open for each partition value
+      in the reducer thereby reducing the memory pressure on reducers.
+    </description>
+  </property>
+  
+  <property>
+    <name>hive.server2.tez.default.queues</name>
+    <value>default</value>
+  </property>
+
+  <property>
+    <name>hive.server2.tez.initialize.default.sessions</name>
+    <value>false</value>
+  </property>
+
+  <property>
+    <name>hive.server2.tez.sessions.per.default.queue</name>
+    <value>1</value>
+  </property>
+
+  <property>
+    <name>hive.tez.container.size</name>
+    <value>4096</value>
+  </property>
+
+  <!-- LLAP-->
+  <property>
+    <name>hive.execution.mode</name>
+    <value>container</value>
+  </property>
+  <property>
+    <name>hive.llap.execution.mode</name>
+    <value>none</value>
+    <description>
+      Expects one of [auto, none, all, map, only].
+      Chooses whether query fragments will run in container or in llap
+    </description>
+  </property>
+  
+  <property>
+    <name>hive.server2.llap.concurrent.queries</name>
+    <value>-1</value>
+    <description>The number of queries allowed in parallel via llap. Negative number implies 'infinite'.</description>
+  </property>
+
+  <property>
+    <name>hive.llap.daemon.web.port</name>
+    <value>15002</value>
+    <description>LLAP daemon web UI port.</description>
+  </property>
+
+  <property>
+    <name>hive.llap.daemon.web.ssl</name>
+    <value>false</value>
+    <description>Whether LLAP daemon web UI should use SSL.</description>
+  </property>
+  <property>
+    <name>hive.llap.auto.auth</name>
+    <value>false</value>
+    <description>Whether or not to set Hadoop configs to enable auth in LLAP web app.</description>
+  </property>
+  <property>
+    <name>hive.llap.daemon.service.principal</name>
+    <value/>
+    <description>The name of the LLAP daemon's service principal.</description>
+  </property>
+
+   <property>
+    <name>hive.llap.daemon.service.hosts</name>
+    <value>@llap-demo</value>
+    <description>
+      Explicitly specified hosts to use for LLAP scheduling. Useful for testing. By default,
+      YARN registry is used.
+    </description>
+   </property>
+    <property>
+    <name>hive.llap.daemon.service.refresh.interval.sec</name>
+    <value>60s</value>
+    <description>
+      Expects a time value with unit (d/day, h/hour, m/min, s/sec, ms/msec, us/usec, ns/nsec), which is sec if not specified.
+      LLAP YARN registry service list refresh delay, in seconds.
+    </description>
+    </property>
+
+    <property>
+    <name>hive.llap.object.cache.enabled</name>
+    <value>true</value>
+    <description>Cache objects (plans, hashtables, etc) in llap</description>
+  </property>
+
+  <property>
+    <name>hive.llap.io.use.lrfu</name>
+    <value>true</value>
+    <description>Whether ORC low-level cache should use LRFU cache policy instead of default (FIFO).</description>
+  </property>
+  <property>
+    <name>hive.llap.io.lrfu.lambda</name>
+    <value>1.0E-6</value>
+    <description>
+      Lambda for ORC low-level cache LRFU cache policy. Must be in [0, 1]. 0 makes LRFU
+      behave like LFU, 1 makes it behave like LRU, values in between balance accordingly.
+      The meaning of this parameter is the inverse of the number of time ticks (cache
+       operations, currently) that cause the combined recency-frequency of a block in cache
+       to be halved.
+    </description>
+  </property>
+  <property>
+    <name>hive.llap.io.enabled</name>
+    <value/>
+    <description>Whether the LLAP IO layer is enabled.</description>
+  </property>
+
+  <property>
+    <name>hive.llap.io.threadpool.size</name>
+    <value>10</value>
+    <description>Specify the number of threads to use for low-level IO thread pool.</description>
+  </property>
+
+  <property>
+    <name>hive.llap.io.orc.time.counters</name>
+    <value>true</value>
+    <description>Whether to enable time counters for LLAP IO layer (time spent in HDFS, etc.)</description>
+  </property>
+
+  <property>
+    <name>hive.llap.io.memory.mode</name>
+    <value>cache</value>
+    <description>
+      Expects one of [cache, none].
+      LLAP IO memory usage; 'cache' (the default) uses data and metadata cache with a
+      custom off-heap allocator, 'none' doesn't use either (this mode may result in
+      significant performance degradation)
+    </description>
+  </property>
+
+  <property>
+    <name>hive.llap.io.allocator.direct</name>
+    <value>true</value>
+    <description>Whether ORC low-level cache should use direct allocation.</description>
+  </property>
+
+  <property>
+    <name>hive.llap.io.allocator.mmap</name>
+    <value>false</value>
+    <description>
+      Whether ORC low-level cache should use memory mapped allocation (direct I/O). 
+      This is recommended to be used along-side NVDIMM (DAX) or NVMe flash storage.
+    </description>
+  </property>
+
+  <property>
+    <name>hive.llap.auto.allow.uber</name>
+    <value>false</value>
+    <description>Whether or not to allow the planner to run vertices in the AM.</description>
+  </property>
+  <property>
+    <name>hive.llap.auto.enforce.tree</name>
+    <value>true</value>
+    <description>Enforce that all parents are in llap, before considering vertex</description>
+  </property>
+  <property>
+    <name>hive.llap.auto.enforce.vectorized</name>
+    <value>true</value>
+    <description>Enforce that inputs are vectorized, before considering vertex</description>
+  </property>
+  <property>
+    <name>hive.llap.auto.enforce.stats</name>
+    <value>true</value>
+    <description>Enforce that col stats are available, before considering vertex</description>
+  </property>
+  <property>
+    <name>hive.llap.auto.max.input.size</name>
+    <value>10737418240</value>
+    <description>Check input size, before considering vertex (-1 disables check)</description>
+  </property>
+  <property>
+    <name>hive.llap.auto.max.output.size</name>
+    <value>1073741824</value>
+    <description>Check output size, before considering vertex (-1 disables check)</description>
+  </property>
+
+  <property>
+    <name>hive.llap.management.rpc.port</name>
+    <value>15004</value>
+    <description>RPC port for LLAP daemon management service.</description>
+  </property>
+
+  <property>
+    <name>hive.llap.allow.permanent.fns</name>
+    <value>true</value>
+    <description>Whether LLAP decider should allow permanent UDFs.</description>
+  </property>
+
+  <property>
+    <name>hive.llap.daemon.download.permanent.fns</name>
+    <value>false</value>
+    <description>Whether LLAP daemon should localize the resources for permanent UDFs.</description>
+  </property>
+  <property>
+    <name>hive.llap.daemon.memory.per.instance.mb</name>
+    <value>1024</value>
+    <description>The total amount of memory to use for the executors inside LLAP (in megabytes).</description>
+  </property>
+  <property>
+    <name>hive.llap.daemon.num.executors</name>
+    <value>2</value>
+  </property>
+  <!-- end LLAP -->
+  <property>
+    <name>hive.cli.tez.session.async</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>hive.exec.dynamic.partition</name>
+    <value>true</value>
+  </property>
+   <property>
+    <name>hive.exec.max.dynamic.partitions.pernode</name>
+    <value>10000</value>
+  </property>
+  <property>
+    <name>metastore.server.min.threads</name>
+    <value>2</value>
+  </property>
+  <property>
+    <name>hive.mv.files.thread</name>
+    <value>0</value>
+  </property>
+  <property>
+    <name>hive.metastore.fshandler.threads</name>
+    <value>1</value>
+  </property>
+  <!--property>
+    <name>hive.metastore.pre.event.listeners</name>
+    <value>org.apache.hadoop.hive.ql.security.authorization.AuthorizationPreEventListener</value>
+  </property-->
+
+  <property>
+  <name>hive.security.metastore.authorization.manager</name>
+  <value>org.apache.hadoop.hive.ql.security.authorization.DefaultHiveMetastoreAuthorizationProvider</value>
+  <description>
+    Names of authorization manager classes (comma separated) to be used in the metastore
+    for authorization. The user defined authorization class should implement interface
+    org.apache.hadoop.hive.ql.security.authorization.HiveMetastoreAuthorizationProvider.
+    All authorization manager classes have to successfully authorize the metastore API
+    call for the command execution to be allowed.
+  </description>
+</property>
+  <property>
+    <name>hive.tez.exec.print.summary</name>
+    <value>true</value>
+  </property>
+   <property>
+    <name>delete.partition.data.thread</name>
+    <value>11</value>
+    <description>Number of threads used to delete partition data in drop table task. Set it to 0 to disable multi-threaded partition data deletion.</description>
+  </property>
+  <property>
+    <name>hive.server2.materializedviews.registry.impl</name>
+    <value>DUMMY</value>
+  </property>
+  <property>
+    <name>hive.prewarm.enabled</name>
+    <value>false</value>
+  </property>
+  
+  <property>
+    <name>hive.server2.tez.initialize.default.sessions</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>hive.server2.tez.default.queues</name>
+    <value>default, queueA.aa</value>
+  </property>
+  <property>
+    <name>hive.server2.tez.sessions.per.default.queue</name>
+    <value>1</value>
+  </property>
+   <property>
+    <name>hive.tez.auto.reducer.parallelism</name>
+    <value>true</value>
+    <description>
+      Turn on Tez' auto reducer parallelism feature. When enabled, Hive will still estimate data sizes
+      and set parallelism estimates. Tez will sample source vertices' output sizes and adjust the estimates at runtime as
+      necessary.
+    </description>
+  </property>
+  <property>
+    <name>hive.stats.fetch.column.stats</name>
+    <value>true</value>
+    <description>
+      Annotation of operator tree with statistics information requires column statistics.
+      Column statistics are fetched from metastore. Fetching column statistics for each needed column
+      can be expensive when the number of columns is high. This flag can be used to disable fetching
+      of column statistics from metastore.
+    </description>
+  </property>
+   <property>
+    <name>hive.metastore.db.type</name>
+    <value>MYSQL</value>
+    <description>
+      Expects one of [derby, oracle, mysql, mssql, postgres].
+      Type of database used by the metastore. Information schema &amp; JDBCStorageHandler depend on it.
+    </description>
+  </property>
+ <property>
+    <name>hive.metastore.metrics.enabled</name>
+    <value>true</value>
+ </property>
+  <property>
+    <name>hive.driver.parallel.compilation</name>
+    <value>false</value>
+    <description>
+      Whether to
+      enable parallel compilation of the queries between sessions and within the same session on HiveServer2. The default is false.
+    </description>
+  </property>
+
+   <property>
+    <name>hive.query.reexecution.enabled</name>
+    <value>false</value>
+    <description>Enable query reexecutions</description>
+  </property>
+</configuration>

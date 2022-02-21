@@ -1,7 +1,11 @@
 package com.baidu.hive.comiple;
 
 import com.baidu.hive.util.log.LogUtil;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.common.io.CachingPrintStream;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -14,11 +18,11 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Map;
 
-public class DriverCompile  implements Runnable {
+public class DriverCompile {
 
-    private String database;
-    private String dir;
-    private int times;
+    private final String database;
+    private final String dir;
+    private final int times;
     private IDriver driver;
 
     public DriverCompile(String database, String dir, int times) {
@@ -27,9 +31,8 @@ public class DriverCompile  implements Runnable {
         this.times = times;
     }
 
-    @Override
-    public void run() {
-        init();
+    public void execute() {
+        this.createSession();
         this.driver = DriverFactory.newDriver(SessionState.get().getConf());
         driver.run("use  " + database);
         long time1 = System.currentTimeMillis();
@@ -38,23 +41,60 @@ public class DriverCompile  implements Runnable {
         LogUtil.log(String.format("Thread %s takes %s ms",
                                   Thread.currentThread().getId(),
                                   time2 - time1));
+        this.closeSession();
         System.exit(0);
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    private void closeSession() {
+        try {
+            SessionState.get().close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void runInteranl()  {
+        File parentFile = new File(dir);
+        File[] files = parentFile.listFiles((dir, name) -> name.endsWith(".sql"));
+        if (files == null) {
+            System.out.printf("The directory '%s' does not exist", dir);
+            return;
+        }
+        for (int i = 0; i < times; i++) {
+            LogUtil.log(String.format("Thread=%s, times=%s", Thread.currentThread().getName(), i));
+            for (File file : files) {
+                String str = getSQLFromFile(file);
+                String[] sqls = str.split(";");
+                for (String sql : sqls) {
+                    if (sql.length() < 5) {
+                        continue;
+                    }
+                    long time1 = System.currentTimeMillis();
+                    driver.compile(sql);
+                    long time2 = System.currentTimeMillis();
+                    LogUtil.log(String.format("Thread %s done file %s in %s ms",
+                                              Thread.currentThread().getId(),
+                                              file.getName(),
+                                              time2 - time1));
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
         OptionsProcessor optionsProcessor = new OptionsProcessor();
         CommandLine cli = optionsProcessor.process(args);
         String database = cli.getOptionValue("database", "tpcds_hdfs_orc_3");
-        String dir = cli.getOptionValue("directory", "/home/houzhizhen/git/hive-testbench/sample-queries-tpcds");
+        String dir = cli.getOptionValue("directory", ".");
         int iterators = Integer.parseInt(cli.getOptionValue("iterators", "1"));
 
-        System.out.println(String.format("database=%s, dir=%s, iterators=%s",
-                                         database, dir, iterators));
+        System.out.printf("database=%s, dir=%s, iterators=%s%n",
+                          database, dir, iterators);
 
-        new DriverCompile(database, dir, iterators).run();
+        new DriverCompile(database, dir, iterators).execute();
     }
 
-    private void init() {
+    private void createSession() {
         HiveConf conf = new HiveConf(SessionState.class);
 
         for (Map.Entry<String, String> entry : conf) {
@@ -70,7 +110,6 @@ public class DriverCompile  implements Runnable {
             e.printStackTrace();
         }
         CliSessionState.start(ss);
-
     }
 
     public static String getSQLFromFile(File file) {
@@ -92,35 +131,12 @@ public class DriverCompile  implements Runnable {
         while ((line = r.readLine()) != null) {
             // Skipping through comments
             if (! line.startsWith("--")) {
-                qsb.append(line + "\n");
+                qsb.append(line).append("\n");
             }
         }
         return qsb.toString();
     }
 
-    private void runInteranl()  {
-        File parentFile = new File(dir);
-        File[] files = parentFile.listFiles((dir, name) -> name.endsWith(".sql"));
-        for (int i = 0; i < times; i++) {
-            LogUtil.log(String.format("Thread=%s, times=%s", Thread.currentThread().getName(), i));
-            for (File file : files) {
-                String str = getSQLFromFile(file);
-                String[] sqls = str.split(";");
-                for (String sql : sqls) {
-                    if (sql.length() < 5) {
-                        continue;
-                    }
-                    long time1 = System.currentTimeMillis();
-                    driver.compile(sql);
-                    long time2 = System.currentTimeMillis();
-                    LogUtil.log(String.format("Thread %s done file %s in %s ms",
-                                              Thread.currentThread().getId(),
-                                              file.getName(),
-                                              time2 - time1));
-                }
-            }
-        }
-    }
 
     private static class OptionsProcessor {
 
