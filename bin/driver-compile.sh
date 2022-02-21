@@ -1,0 +1,1 @@
+java com.baidu.hive.comiple.DriverCompile --database tpcds_hdfs_orc_3 --directory /home/hive/hive-testbench/sample-queries-tpcds/ --iterators 1
