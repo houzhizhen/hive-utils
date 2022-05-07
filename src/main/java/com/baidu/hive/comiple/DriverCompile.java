@@ -1,5 +1,6 @@
 package com.baidu.hive.comiple;
 
+import com.baidu.hive.driver.DriverBase;
 import com.baidu.hive.util.log.LogUtil;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -18,7 +19,7 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.Map;
 
-public class DriverCompile {
+public class DriverCompile extends DriverBase {
 
     private final String database;
     private final String dir;
@@ -43,14 +44,6 @@ public class DriverCompile {
                                   time2 - time1));
         this.closeSession();
         System.exit(0);
-    }
-
-    private void closeSession() {
-        try {
-            SessionState.get().close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void runInteranl()  {
@@ -92,24 +85,6 @@ public class DriverCompile {
                           database, dir, iterators);
 
         new DriverCompile(database, dir, iterators).execute();
-    }
-
-    private void createSession() {
-        HiveConf conf = new HiveConf(SessionState.class);
-
-        for (Map.Entry<String, String> entry : conf) {
-            LogUtil.log("key:" + entry.getKey() + ", value:" + entry.getValue());
-        }
-        CliSessionState ss = new CliSessionState(conf);
-        ss.in = System.in;
-        try {
-            ss.out = new PrintStream(System.out, true, "UTF-8");
-            ss.info = new PrintStream(System.err, true, "UTF-8");
-            ss.err = new CachingPrintStream(System.err, true, "UTF-8");
-        } catch (UnsupportedEncodingException | FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        CliSessionState.start(ss);
     }
 
     public static String getSQLFromFile(File file) {
