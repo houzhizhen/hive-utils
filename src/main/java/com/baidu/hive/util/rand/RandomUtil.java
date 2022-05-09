@@ -32,4 +32,8 @@ public class RandomUtil {
         LogUtil.log(randomDecimal(5, 2));
         LogUtil.log(randomDecimal(38, 0));
     }
+
+    public static String randomDouble() {
+        return random.nextDouble() + "";
+    }
 }

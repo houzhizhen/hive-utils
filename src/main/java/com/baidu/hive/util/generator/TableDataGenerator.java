@@ -64,8 +64,9 @@ public class TableDataGenerator extends DriverBase {
         for (long i = 0; i < this.size; i++) {
             for (FieldSchema schema : fieldSchemas) {
                 if (serdeConstants.STRING_TYPE_NAME.equals(schema.getType())) {
-
                     printWriter.print(RandomUtil.randomString(10));
+                } else if (serdeConstants.DOUBLE_TYPE_NAME.equals(schema.getType())) {
+                    printWriter.print(RandomUtil.randomDouble());
                 } else if (schema.getType().startsWith(serdeConstants.DECIMAL_TYPE_NAME)){
                     String suffix = schema.getType().substring(serdeConstants.DECIMAL_TYPE_NAME.length());
                     suffix = suffix.substring(1, suffix.length() - 1);
@@ -86,6 +87,10 @@ public class TableDataGenerator extends DriverBase {
 
     public static void main(String [] args) throws HiveException, IOException {
         // args = new String[]{"test", "t2", "t2", "10"};
+        LogUtil.log("Parameters.length:" + args.length);
+        for (int i = 0; i < args.length; i++) {
+            LogUtil.log("parameter[" + i + "]:" + args[0]);
+        }
         if (args.length != 4) {
             LogUtil.log("Parameters: database name, table name, file name, size");
             System.exit(1);
