@@ -16,8 +16,8 @@ public class ParallelStatementTest {
 
     public static void main(String[] args) throws ClassNotFoundException, SQLException, InterruptedException {
         String hiveUrl = "jdbc:hive2://localhost:10000/default";
-        int times = 10;
-        String sql = "select * from t1 limit 1";
+        int times = 1000;
+        String sql = "select echo(1)";
         String userName = "hive";
         boolean closeConnection = true;
         if (args.length >0) {
@@ -47,7 +47,7 @@ public class ParallelStatementTest {
             for (int i = 0; i < times; i++) {
                 LogUtil.log("i = " + i);
                 Connection conn = java.sql.DriverManager.getConnection(hiveUrl, userName, "hive");
-                parallelExecute(conn, sql, 2, 3);
+                parallelExecute(conn, sql, 1, 1);
                 conn.close();
             }
         } catch(Throwable t) {

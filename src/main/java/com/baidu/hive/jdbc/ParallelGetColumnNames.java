@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ParallelGetColumnNames extends GetColumnNames {
     public static void main(String[] args) throws ClassNotFoundException, SQLException, InterruptedException {
         String hiveUrl = "jdbc:hive2://localhost:10000/default";
-        int times = 100;
+        int times = 1;
         String tableName = "t1";
         String userName = "hive";
         boolean closeConnection = true;
@@ -47,7 +47,7 @@ public class ParallelGetColumnNames extends GetColumnNames {
                 LogUtil.log("i = " + i);
                 ParallelGetColumnNames parallelGetColumnNames = new ParallelGetColumnNames();
                 parallelGetColumnNames.createConnection();
-                parallelGetColumnNames.parallelExecute(tableName, 2, 3);
+                parallelGetColumnNames.parallelExecute(tableName, 10, 1);
                 parallelGetColumnNames.closeConnection();
             }
         } catch(Throwable t) {
@@ -58,7 +58,7 @@ public class ParallelGetColumnNames extends GetColumnNames {
                 LogUtil.log("Error Finished");
             } else {
                 LogUtil.log("Success Finished");
-               TimeUnit.SECONDS.sleep(3600);
+               //TimeUnit.SECONDS.sleep(3600);
             }
         }
     }
@@ -71,9 +71,9 @@ public class ParallelGetColumnNames extends GetColumnNames {
                 @Override
                 public void run() {
                     try {
-                        System.out.println("start countdown");
+                       // System.out.println("start countdown");
                         countDown.countDown();
-                        System.out.println("end countdown");
+                        //System.out.println("end countdown");
                         for (int j = 0; j < times; j++) {
                             getColumnNames("hive", "default", tableName, "%");
                         }

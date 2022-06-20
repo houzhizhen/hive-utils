@@ -9,7 +9,7 @@ public abstract class ConnectionBase {
     protected Connection connection;
 
     protected void createConnection() throws SQLException {
-        createConnection("jdbc:hive2://localhost:10000/", "houzhizhen","houzhizhen");
+        createConnection("jdbc:hive2://localhost:2181/", "houzhizhen","houzhizhen");
     }
 
     protected void createConnection(String url, String userName, String password) throws SQLException {
