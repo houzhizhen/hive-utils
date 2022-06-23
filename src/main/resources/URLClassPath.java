@@ -495,48 +495,48 @@
 /*  743 */         if (param1Boolean)
 /*  744 */           URLClassPath.check(uRL); 
 /*  746 */         uRLConnection = uRL.openConnection();
-/*  747 */         InputStream inputStream = uRLConnection.getInputStream();
-/*  748 */         if (uRLConnection instanceof JarURLConnection) {
+/*  747 */         if (uRLConnection instanceof JarURLConnection) {
 /*  752 */           JarURLConnection jarURLConnection = (JarURLConnection)uRLConnection;
 /*  753 */           this.jarfile = URLClassPath.JarLoader.checkJar(jarURLConnection.getJarFile());
 /*      */         } 
-/*  755 */       } catch (Exception exception) {
-/*  756 */         return null;
+/*  756 */         InputStream inputStream = uRLConnection.getInputStream();
+/*  757 */       } catch (Exception exception) {
+/*  758 */         return null;
 /*      */       } 
-/*  758 */       return new Resource() {
+/*  760 */       return new Resource() {
 /*      */           public String getName() {
-/*  759 */             return name;
+/*  761 */             return name;
 /*      */           }
 /*      */           
 /*      */           public URL getURL() {
-/*  760 */             return url;
+/*  762 */             return url;
 /*      */           }
 /*      */           
 /*      */           public URL getCodeSourceURL() {
-/*  761 */             return URLClassPath.Loader.this.base;
+/*  763 */             return URLClassPath.Loader.this.base;
 /*      */           }
 /*      */           
 /*      */           public InputStream getInputStream() throws IOException {
-/*  763 */             return uc.getInputStream();
+/*  765 */             return uc.getInputStream();
 /*      */           }
 /*      */           
 /*      */           public int getContentLength() throws IOException {
-/*  766 */             return uc.getContentLength();
+/*  768 */             return uc.getContentLength();
 /*      */           }
 /*      */         };
 /*      */     }
 /*      */     
 /*      */     Resource getResource(String param1String) {
-/*  777 */       return getResource(param1String, true);
+/*  779 */       return getResource(param1String, true);
 /*      */     }
 /*      */     
 /*      */     public void close() throws IOException {
-/*  785 */       if (this.jarfile != null)
-/*  786 */         this.jarfile.close(); 
+/*  787 */       if (this.jarfile != null)
+/*  788 */         this.jarfile.close(); 
 /*      */     }
 /*      */     
 /*      */     URL[] getClassPath() throws IOException {
-/*  794 */       return null;
+/*  796 */       return null;
 /*      */     }
 /*      */   }
 /*      */   
@@ -557,329 +557,352 @@
 /*      */     
 /*      */     private boolean closed = false;
 /*      */     
-/*  811 */     private static final JavaUtilZipFileAccess zipAccess = SharedSecrets.getJavaUtilZipFileAccess();
+/*  813 */     private static final JavaUtilZipFileAccess zipAccess = SharedSecrets.getJavaUtilZipFileAccess();
 /*      */     
 /*      */     JarLoader(URL param1URL, URLStreamHandler param1URLStreamHandler, HashMap<String, URLClassPath.Loader> param1HashMap, AccessControlContext param1AccessControlContext) throws IOException {
-/*  822 */       super(new URL("jar", "", -1, param1URL + "!/", param1URLStreamHandler));
-/*  823 */       this.csu = param1URL;
-/*  824 */       this.handler = param1URLStreamHandler;
-/*  825 */       this.lmap = param1HashMap;
-/*  826 */       this.acc = param1AccessControlContext;
-/*  828 */       if (!isOptimizable(param1URL)) {
-/*  829 */         ensureOpen();
+/*  824 */       super(new URL("jar", "", -1, param1URL + "!/", param1URLStreamHandler));
+/*  825 */       this.csu = param1URL;
+/*  826 */       this.handler = param1URLStreamHandler;
+/*  827 */       this.lmap = param1HashMap;
+/*  828 */       this.acc = param1AccessControlContext;
+/*  830 */       if (!isOptimizable(param1URL)) {
+/*  831 */         ensureOpen();
 /*      */       } else {
-/*  831 */         String str = param1URL.getFile();
-/*  832 */         if (str != null) {
-/*  833 */           str = ParseUtil.decode(str);
-/*  834 */           File file = new File(str);
-/*  835 */           this.metaIndex = MetaIndex.forJar(file);
-/*  842 */           if (this.metaIndex != null && !file.exists())
-/*  843 */             this.metaIndex = null; 
+/*  833 */         String str = param1URL.getFile();
+/*  834 */         if (str != null) {
+/*  835 */           str = ParseUtil.decode(str);
+/*  836 */           File file = new File(str);
+/*  837 */           this.metaIndex = MetaIndex.forJar(file);
+/*  844 */           if (this.metaIndex != null && !file.exists())
+/*  845 */             this.metaIndex = null; 
 /*      */         } 
-/*  850 */         if (this.metaIndex == null)
-/*  851 */           ensureOpen(); 
+/*  852 */         if (this.metaIndex == null)
+/*  853 */           ensureOpen(); 
 /*      */       } 
 /*      */     }
 /*      */     
 /*      */     public void close() throws IOException {
-/*  859 */       if (!this.closed) {
-/*  860 */         this.closed = true;
-/*  862 */         ensureOpen();
-/*  863 */         this.jar.close();
+/*  861 */       if (!this.closed) {
+/*  862 */         this.closed = true;
+/*  864 */         ensureOpen();
+/*  865 */         this.jar.close();
 /*      */       } 
 /*      */     }
 /*      */     
 /*      */     JarFile getJarFile() {
-/*  868 */       return this.jar;
+/*  870 */       return this.jar;
 /*      */     }
 /*      */     
 /*      */     private boolean isOptimizable(URL param1URL) {
-/*  872 */       return "file".equals(param1URL.getProtocol());
+/*  874 */       return "file".equals(param1URL.getProtocol());
 /*      */     }
 /*      */     
 /*      */     private void ensureOpen() throws IOException {
-/*  876 */       if (this.jar == null)
+/*  878 */       if (this.jar == null)
 /*      */         try {
-/*  878 */           AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
+/*  880 */           AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
 /*      */                 public Void run() throws IOException {
-/*  881 */                   if (URLClassPath.DEBUG) {
-/*  882 */                     System.err.println("Opening " + URLClassPath.JarLoader.this.csu);
-/*  883 */                     Thread.dumpStack();
+/*  883 */                   if (URLClassPath.DEBUG) {
+/*  884 */                     System.err.println("Opening " + URLClassPath.JarLoader.this.csu);
+/*  885 */                     Thread.dumpStack();
 /*      */                   } 
-/*  886 */                   URLClassPath.JarLoader.this.jar = URLClassPath.JarLoader.this.getJarFile(URLClassPath.JarLoader.this.csu);
-/*  887 */                   URLClassPath.JarLoader.this.index = JarIndex.getJarIndex(URLClassPath.JarLoader.this.jar, URLClassPath.JarLoader.this.metaIndex);
-/*  888 */                   if (URLClassPath.JarLoader.this.index != null) {
-/*  889 */                     String[] arrayOfString = URLClassPath.JarLoader.this.index.getJarFiles();
-/*  895 */                     for (byte b = 0; b < arrayOfString.length; b++) {
+/*  888 */                   URLClassPath.JarLoader.this.jar = URLClassPath.JarLoader.this.getJarFile(URLClassPath.JarLoader.this.csu);
+/*  889 */                   URLClassPath.JarLoader.this.index = JarIndex.getJarIndex(URLClassPath.JarLoader.this.jar, URLClassPath.JarLoader.this.metaIndex);
+/*  890 */                   if (URLClassPath.JarLoader.this.index != null) {
+/*  891 */                     String[] arrayOfString = URLClassPath.JarLoader.this.index.getJarFiles();
+/*  897 */                     for (byte b = 0; b < arrayOfString.length; b++) {
 /*      */                       try {
-/*  897 */                         URL uRL = new URL(URLClassPath.JarLoader.this.csu, arrayOfString[b]);
-/*  899 */                         String str = URLUtil.urlNoFragString(uRL);
-/*  900 */                         if (!URLClassPath.JarLoader.this.lmap.containsKey(str))
-/*  901 */                           URLClassPath.JarLoader.this.lmap.put(str, null); 
-/*  903 */                       } catch (MalformedURLException malformedURLException) {}
+/*  899 */                         URL uRL = new URL(URLClassPath.JarLoader.this.csu, arrayOfString[b]);
+/*  901 */                         String str = URLUtil.urlNoFragString(uRL);
+/*  902 */                         if (!URLClassPath.JarLoader.this.lmap.containsKey(str))
+/*  903 */                           URLClassPath.JarLoader.this.lmap.put(str, null); 
+/*  905 */                       } catch (MalformedURLException malformedURLException) {}
 /*      */                     } 
 /*      */                   } 
-/*  908 */                   return null;
+/*  910 */                   return null;
 /*      */                 }
 /*      */               }this.acc);
-/*  911 */         } catch (PrivilegedActionException privilegedActionException) {
-/*  912 */           throw (IOException)privilegedActionException.getException();
+/*  913 */         } catch (PrivilegedActionException privilegedActionException) {
+/*  914 */           throw (IOException)privilegedActionException.getException();
 /*      */         }  
 /*      */     }
 /*      */     
 /*      */     static JarFile checkJar(JarFile param1JarFile) throws IOException {
-/*  919 */       if (System.getSecurityManager() != null && !URLClassPath.DISABLE_JAR_CHECKING && 
-/*  920 */         !zipAccess.startsWithLocHeader(param1JarFile)) {
-/*  921 */         IOException iOException = new IOException("Invalid Jar file");
+/*  921 */       if (System.getSecurityManager() != null && !URLClassPath.DISABLE_JAR_CHECKING && 
+/*  922 */         !zipAccess.startsWithLocHeader(param1JarFile)) {
+/*  923 */         IOException iOException = new IOException("Invalid Jar file");
 /*      */         try {
-/*  923 */           param1JarFile.close();
-/*  924 */         } catch (IOException iOException1) {
-/*  925 */           iOException.addSuppressed(iOException1);
+/*  925 */           param1JarFile.close();
+/*  926 */         } catch (IOException iOException1) {
+/*  927 */           iOException.addSuppressed(iOException1);
 /*      */         } 
-/*  927 */         throw iOException;
+/*  929 */         throw iOException;
 /*      */       } 
-/*  930 */       return param1JarFile;
+/*  932 */       return param1JarFile;
 /*      */     }
 /*      */     
 /*      */     private JarFile getJarFile(URL param1URL) throws IOException {
-/*  935 */       if (isOptimizable(param1URL)) {
-/*  936 */         FileURLMapper fileURLMapper = new FileURLMapper(param1URL);
-/*  937 */         if (!fileURLMapper.exists())
-/*  938 */           throw new FileNotFoundException(fileURLMapper.getPath()); 
-/*  940 */         return checkJar(new JarFile(fileURLMapper.getPath()));
+/*  937 */       if (isOptimizable(param1URL)) {
+/*  938 */         FileURLMapper fileURLMapper = new FileURLMapper(param1URL);
+/*  939 */         if (!fileURLMapper.exists())
+/*  940 */           throw new FileNotFoundException(fileURLMapper.getPath()); 
+/*  942 */         return checkJar(new JarFile(fileURLMapper.getPath()));
 /*      */       } 
-/*  942 */       URLConnection uRLConnection = getBaseURL().openConnection();
-/*  943 */       uRLConnection.setRequestProperty("UA-Java-Version", URLClassPath.JAVA_VERSION);
-/*  944 */       JarFile jarFile = ((JarURLConnection)uRLConnection).getJarFile();
-/*  945 */       return checkJar(jarFile);
+/*  944 */       URLConnection uRLConnection = getBaseURL().openConnection();
+/*  945 */       uRLConnection.setRequestProperty("UA-Java-Version", URLClassPath.JAVA_VERSION);
+/*  946 */       JarFile jarFile = ((JarURLConnection)uRLConnection).getJarFile();
+/*  947 */       return checkJar(jarFile);
 /*      */     }
 /*      */     
 /*      */     JarIndex getIndex() {
 /*      */       try {
-/*  953 */         ensureOpen();
-/*  954 */       } catch (IOException iOException) {
-/*  955 */         throw new InternalError(iOException);
+/*  955 */         ensureOpen();
+/*  956 */       } catch (IOException iOException) {
+/*  957 */         throw new InternalError(iOException);
 /*      */       } 
-/*  957 */       return this.index;
+/*  959 */       return this.index;
 /*      */     }
 /*      */     
 /*      */     Resource checkResource(final String name, boolean param1Boolean, final JarEntry entry) {
 /*      */       final URL url;
 /*      */       try {
-/*  969 */         uRL = new URL(getBaseURL(), ParseUtil.encodePath(name, false));
-/*  970 */         if (param1Boolean)
-/*  971 */           URLClassPath.check(uRL); 
-/*  973 */       } catch (MalformedURLException malformedURLException) {
-/*  974 */         return null;
-/*  976 */       } catch (IOException iOException) {
-/*  977 */         return null;
-/*  978 */       } catch (AccessControlException accessControlException) {
+/*  971 */         uRL = new URL(getBaseURL(), ParseUtil.encodePath(name, false));
+/*  972 */         if (param1Boolean)
+/*  973 */           URLClassPath.check(uRL); 
+/*  975 */       } catch (MalformedURLException malformedURLException) {
+/*  976 */         return null;
+/*  978 */       } catch (IOException iOException) {
 /*  979 */         return null;
+/*  980 */       } catch (AccessControlException accessControlException) {
+/*  981 */         return null;
 /*      */       } 
-/*  982 */       return new Resource() {
+/*  984 */       return new Resource() {
 /*      */           public String getName() {
-/*  983 */             return name;
+/*  985 */             return name;
 /*      */           }
 /*      */           
 /*      */           public URL getURL() {
-/*  984 */             return url;
+/*  986 */             return url;
 /*      */           }
 /*      */           
 /*      */           public URL getCodeSourceURL() {
-/*  985 */             return URLClassPath.JarLoader.this.csu;
+/*  987 */             return URLClassPath.JarLoader.this.csu;
 /*      */           }
 /*      */           
 /*      */           public InputStream getInputStream() throws IOException {
-/*  987 */             return URLClassPath.JarLoader.this.jar.getInputStream(entry);
+/*  989 */             return URLClassPath.JarLoader.this.jar.getInputStream(entry);
 /*      */           }
 /*      */           
 /*      */           public int getContentLength() {
-/*  989 */             return (int)entry.getSize();
+/*  991 */             return (int)entry.getSize();
 /*      */           }
 /*      */           
 /*      */           public Manifest getManifest() throws IOException {
-/*  991 */             SharedSecrets.javaUtilJarAccess().ensureInitialization(URLClassPath.JarLoader.this.jar);
-/*  992 */             return URLClassPath.JarLoader.this.jar.getManifest();
+/*  993 */             SharedSecrets.javaUtilJarAccess().ensureInitialization(URLClassPath.JarLoader.this.jar);
+/*  994 */             return URLClassPath.JarLoader.this.jar.getManifest();
 /*      */           }
 /*      */           
 /*      */           public Certificate[] getCertificates() {
-/*  995 */             return entry.getCertificates();
+/*  997 */             return entry.getCertificates();
 /*      */           }
 /*      */           
 /*      */           public CodeSigner[] getCodeSigners() {
-/*  997 */             return entry.getCodeSigners();
+/*  999 */             return entry.getCodeSigners();
 /*      */           }
 /*      */         };
 /*      */     }
 /*      */     
 /*      */     boolean validIndex(String param1String) {
-/* 1007 */       String str = param1String;
+/* 1009 */       String str = param1String;
 /*      */       int i;
-/* 1009 */       if ((i = param1String.lastIndexOf("/")) != -1)
-/* 1010 */         str = param1String.substring(0, i); 
-/* 1015 */       Enumeration<JarEntry> enumeration = this.jar.entries();
-/* 1016 */       while (enumeration.hasMoreElements()) {
-/* 1017 */         ZipEntry zipEntry = enumeration.nextElement();
-/* 1018 */         String str1 = zipEntry.getName();
-/* 1019 */         if ((i = str1.lastIndexOf("/")) != -1)
-/* 1020 */           str1 = str1.substring(0, i); 
-/* 1021 */         if (str1.equals(str))
-/* 1022 */           return true; 
+/* 1011 */       if ((i = param1String.lastIndexOf("/")) != -1)
+/* 1012 */         str = param1String.substring(0, i); 
+/* 1017 */       Enumeration<JarEntry> enumeration = this.jar.entries();
+/* 1018 */       while (enumeration.hasMoreElements()) {
+/* 1019 */         ZipEntry zipEntry = enumeration.nextElement();
+/* 1020 */         String str1 = zipEntry.getName();
+/* 1021 */         if ((i = str1.lastIndexOf("/")) != -1)
+/* 1022 */           str1 = str1.substring(0, i); 
+/* 1023 */         if (str1.equals(str))
+/* 1024 */           return true; 
 /*      */       } 
-/* 1025 */       return false;
+/* 1027 */       return false;
 /*      */     }
 /*      */     
 /*      */     URL findResource(String param1String, boolean param1Boolean) {
-/* 1032 */       Resource resource = getResource(param1String, param1Boolean);
-/* 1033 */       if (resource != null)
-/* 1034 */         return resource.getURL(); 
-/* 1036 */       return null;
+/* 1034 */       Resource resource = getResource(param1String, param1Boolean);
+/* 1035 */       if (resource != null)
+/* 1036 */         return resource.getURL(); 
+/* 1038 */       return null;
 /*      */     }
 /*      */     
 /*      */     Resource getResource(String param1String, boolean param1Boolean) {
-/* 1043 */       if (this.metaIndex != null && 
-/* 1044 */         !this.metaIndex.mayContain(param1String))
-/* 1045 */         return null; 
+/* 1045 */       if (this.metaIndex != null && 
+/* 1046 */         !this.metaIndex.mayContain(param1String))
+/* 1047 */         return null; 
 /*      */       try {
-/* 1050 */         ensureOpen();
-/* 1051 */       } catch (IOException iOException) {
-/* 1052 */         throw new InternalError(iOException);
+/* 1052 */         ensureOpen();
+/* 1053 */       } catch (IOException iOException) {
+/* 1054 */         throw new InternalError(iOException);
 /*      */       } 
-/* 1054 */       JarEntry jarEntry = this.jar.getJarEntry(param1String);
-/* 1055 */       if (jarEntry != null)
-/* 1056 */         return checkResource(param1String, param1Boolean, jarEntry); 
-/* 1058 */       if (this.index == null)
-/* 1059 */         return null; 
-/* 1061 */       HashSet<String> hashSet = new HashSet();
-/* 1062 */       return getResource(param1String, param1Boolean, hashSet);
+/* 1056 */       JarEntry jarEntry = this.jar.getJarEntry(param1String);
+/* 1057 */       if (jarEntry != null)
+/* 1058 */         return checkResource(param1String, param1Boolean, jarEntry); 
+/* 1060 */       if (this.index == null)
+/* 1061 */         return null; 
+/* 1063 */       HashSet<String> hashSet = new HashSet();
+/* 1064 */       return getResource(param1String, param1Boolean, hashSet);
 /*      */     }
 /*      */     
 /*      */     Resource getResource(String param1String, boolean param1Boolean, Set<String> param1Set) {
-/* 1077 */       byte b = 0;
-/* 1078 */       LinkedList<String> linkedList = null;
-/* 1083 */       if ((linkedList = this.index.get(param1String)) == null)
-/* 1084 */         return null; 
+/* 1079 */       byte b = 0;
+/* 1080 */       LinkedList<String> linkedList = null;
+/* 1085 */       if ((linkedList = this.index.get(param1String)) == null)
+/* 1086 */         return null; 
 /*      */       while (true) {
-/* 1087 */         int i = linkedList.size();
-/* 1088 */         String[] arrayOfString = linkedList.<String>toArray(new String[i]);
-/* 1090 */         while (b < i) {
+/* 1089 */         int i = linkedList.size();
+/* 1090 */         String[] arrayOfString = linkedList.<String>toArray(new String[i]);
+/* 1092 */         while (b < i) {
 /*      */           JarLoader jarLoader;
 /*      */           final URL url;
-/* 1091 */           String str = arrayOfString[b++];
+/* 1093 */           String str = arrayOfString[b++];
 /*      */           try {
-/* 1096 */             uRL = new URL(this.csu, str);
-/* 1097 */             String str1 = URLUtil.urlNoFragString(uRL);
-/* 1098 */             if ((jarLoader = (JarLoader)this.lmap.get(str1)) == null) {
-/* 1102 */               jarLoader = AccessController.<JarLoader>doPrivileged(new PrivilegedExceptionAction<JarLoader>() {
+/* 1098 */             uRL = new URL(this.csu, str);
+/* 1099 */             String str1 = URLUtil.urlNoFragString(uRL);
+/* 1100 */             if ((jarLoader = (JarLoader)this.lmap.get(str1)) == null) {
+/* 1104 */               jarLoader = AccessController.<JarLoader>doPrivileged(new PrivilegedExceptionAction<JarLoader>() {
 /*      */                     public URLClassPath.JarLoader run() throws IOException {
-/* 1105 */                       return new URLClassPath.JarLoader(url, URLClassPath.JarLoader.this.handler, URLClassPath.JarLoader.this
-/* 1106 */                           .lmap, URLClassPath.JarLoader.this.acc);
+/* 1107 */                       return new URLClassPath.JarLoader(url, URLClassPath.JarLoader.this.handler, URLClassPath.JarLoader.this
+/* 1108 */                           .lmap, URLClassPath.JarLoader.this.acc);
 /*      */                     }
 /*      */                   }this.acc);
-/* 1114 */               JarIndex jarIndex = jarLoader.getIndex();
-/* 1115 */               if (jarIndex != null) {
-/* 1116 */                 int j = str.lastIndexOf("/");
-/* 1117 */                 jarIndex.merge(this.index, (j == -1) ? null : str
-/* 1118 */                     .substring(0, j + 1));
+/* 1116 */               JarIndex jarIndex = jarLoader.getIndex();
+/* 1117 */               if (jarIndex != null) {
+/* 1118 */                 int j = str.lastIndexOf("/");
+/* 1119 */                 jarIndex.merge(this.index, (j == -1) ? null : str
+/* 1120 */                     .substring(0, j + 1));
 /*      */               } 
-/* 1122 */               this.lmap.put(str1, jarLoader);
+/* 1124 */               this.lmap.put(str1, jarLoader);
 /*      */             } 
-/* 1124 */           } catch (PrivilegedActionException privilegedActionException) {
+/* 1126 */           } catch (PrivilegedActionException privilegedActionException) {
 /*      */             continue;
-/* 1126 */           } catch (MalformedURLException malformedURLException) {
+/* 1128 */           } catch (MalformedURLException malformedURLException) {
 /*      */             continue;
 /*      */           } 
-/* 1134 */           boolean bool = !param1Set.add(URLUtil.urlNoFragString(uRL)) ? true : false;
-/* 1135 */           if (!bool) {
+/* 1136 */           boolean bool = !param1Set.add(URLUtil.urlNoFragString(uRL)) ? true : false;
+/* 1137 */           if (!bool) {
 /*      */             try {
-/* 1137 */               jarLoader.ensureOpen();
-/* 1138 */             } catch (IOException iOException) {
-/* 1139 */               throw new InternalError(iOException);
+/* 1139 */               jarLoader.ensureOpen();
+/* 1140 */             } catch (IOException iOException) {
+/* 1141 */               throw new InternalError(iOException);
 /*      */             } 
-/* 1141 */             JarEntry jarEntry = jarLoader.jar.getJarEntry(param1String);
-/* 1142 */             if (jarEntry != null)
-/* 1143 */               return jarLoader.checkResource(param1String, param1Boolean, jarEntry); 
-/* 1150 */             if (!jarLoader.validIndex(param1String))
-/* 1152 */               throw new InvalidJarIndexException("Invalid index"); 
+/* 1143 */             JarEntry jarEntry = jarLoader.jar.getJarEntry(param1String);
+/* 1144 */             if (jarEntry != null)
+/* 1145 */               return jarLoader.checkResource(param1String, param1Boolean, jarEntry); 
+/* 1152 */             if (!jarLoader.validIndex(param1String))
+/* 1154 */               throw new InvalidJarIndexException("Invalid index"); 
 /*      */           } 
-/* 1161 */           if (bool || jarLoader == this || jarLoader
-/* 1162 */             .getIndex() == null)
+/* 1163 */           if (bool || jarLoader == this || jarLoader
+/* 1164 */             .getIndex() == null)
 /*      */             continue; 
 /*      */           Resource resource;
-/* 1168 */           if ((resource = jarLoader.getResource(param1String, param1Boolean, param1Set)) != null)
-/* 1170 */             return resource; 
+/* 1170 */           if ((resource = jarLoader.getResource(param1String, param1Boolean, param1Set)) != null)
+/* 1172 */             return resource; 
 /*      */         } 
-/* 1175 */         linkedList = this.index.get(param1String);
-/* 1178 */         if (b >= linkedList.size())
-/* 1179 */           return null; 
+/* 1177 */         linkedList = this.index.get(param1String);
+/* 1180 */         if (b >= linkedList.size())
+/* 1181 */           return null; 
 /*      */       } 
 /*      */     }
 /*      */     
 /*      */     URL[] getClassPath() throws IOException {
-/* 1187 */       if (this.index != null)
-/* 1188 */         return null; 
-/* 1191 */       if (this.metaIndex != null)
-/* 1192 */         return null; 
-/* 1195 */       ensureOpen();
-/* 1196 */       parseExtensionsDependencies();
-/* 1198 */       if (SharedSecrets.javaUtilJarAccess().jarFileHasClassPathAttribute(this.jar)) {
-/* 1199 */         Manifest manifest = this.jar.getManifest();
-/* 1200 */         if (manifest != null) {
-/* 1201 */           Attributes attributes = manifest.getMainAttributes();
-/* 1202 */           if (attributes != null) {
-/* 1203 */             String str = attributes.getValue(Attributes.Name.CLASS_PATH);
-/* 1204 */             if (str != null)
-/* 1205 */               return parseClassPath(this.csu, str); 
+/* 1189 */       if (this.index != null)
+/* 1190 */         return null; 
+/* 1193 */       if (this.metaIndex != null)
+/* 1194 */         return null; 
+/* 1197 */       ensureOpen();
+/* 1198 */       parseExtensionsDependencies();
+/* 1200 */       if (SharedSecrets.javaUtilJarAccess().jarFileHasClassPathAttribute(this.jar)) {
+/* 1201 */         Manifest manifest = this.jar.getManifest();
+/* 1202 */         if (manifest != null) {
+/* 1203 */           Attributes attributes = manifest.getMainAttributes();
+/* 1204 */           if (attributes != null) {
+/* 1205 */             String str = attributes.getValue(Attributes.Name.CLASS_PATH);
+/* 1206 */             if (str != null)
+/* 1207 */               return parseClassPath(this.csu, str); 
 /*      */           } 
 /*      */         } 
 /*      */       } 
-/* 1210 */       return null;
+/* 1212 */       return null;
 /*      */     }
 /*      */     
 /*      */     private void parseExtensionsDependencies() throws IOException {
-/* 1217 */       ExtensionDependency.checkExtensionsDependencies(this.jar);
+/* 1219 */       ExtensionDependency.checkExtensionsDependencies(this.jar);
 /*      */     }
 /*      */     
 /*      */     private URL[] parseClassPath(URL param1URL, String param1String) throws MalformedURLException {
-/* 1227 */       StringTokenizer stringTokenizer = new StringTokenizer(param1String);
-/* 1228 */       URL[] arrayOfURL = new URL[stringTokenizer.countTokens()];
-/* 1229 */       byte b = 0;
-/* 1230 */       while (stringTokenizer.hasMoreTokens()) {
-/* 1231 */         String str = stringTokenizer.nextToken();
-/* 1232 */         URL uRL = URLClassPath.DISABLE_CP_URL_CHECK ? new URL(param1URL, str) : safeResolve(param1URL, str);
-/* 1233 */         if (uRL != null) {
-/* 1234 */           arrayOfURL[b] = uRL;
-/* 1235 */           b++;
+/* 1229 */       StringTokenizer stringTokenizer = new StringTokenizer(param1String);
+/* 1230 */       URL[] arrayOfURL = new URL[stringTokenizer.countTokens()];
+/* 1231 */       byte b = 0;
+/* 1232 */       while (stringTokenizer.hasMoreTokens()) {
+/* 1233 */         String str = stringTokenizer.nextToken();
+/* 1234 */         URL uRL = URLClassPath.DISABLE_CP_URL_CHECK ? new URL(param1URL, str) : tryResolve(param1URL, str);
+/* 1235 */         if (uRL != null) {
+/* 1236 */           arrayOfURL[b] = uRL;
+/* 1237 */           b++;
+/*      */           continue;
 /*      */         } 
+/* 1239 */         if (URLClassPath.DEBUG_CP_URL_CHECK)
+/* 1240 */           System.err.println("Class-Path entry: \"" + str + "\" ignored in JAR file " + param1URL); 
 /*      */       } 
-/* 1238 */       if (b == 0) {
-/* 1239 */         arrayOfURL = null;
-/* 1240 */       } else if (b != arrayOfURL.length) {
-/* 1242 */         arrayOfURL = Arrays.<URL>copyOf(arrayOfURL, b);
+/* 1245 */       if (b == 0) {
+/* 1246 */         arrayOfURL = null;
+/* 1247 */       } else if (b != arrayOfURL.length) {
+/* 1249 */         arrayOfURL = Arrays.<URL>copyOf(arrayOfURL, b);
 /*      */       } 
-/* 1244 */       return arrayOfURL;
+/* 1251 */       return arrayOfURL;
 /*      */     }
 /*      */     
-/*      */     static URL safeResolve(URL param1URL, String param1String) {
-/* 1252 */       String str = param1String.replace(File.separatorChar, '/');
+/*      */     static URL tryResolve(URL param1URL, String param1String) throws MalformedURLException {
+/* 1255 */       if ("file".equalsIgnoreCase(param1URL.getProtocol()))
+/* 1256 */         return tryResolveFile(param1URL, param1String); 
+/* 1258 */       return tryResolveNonFile(param1URL, param1String);
+/*      */     }
+/*      */     
+/*      */     static URL tryResolveFile(URL param1URL, String param1String) throws MalformedURLException {
+/*      */       boolean bool;
+/* 1276 */       int i = param1String.indexOf(':');
+/* 1278 */       if (i >= 0) {
+/* 1279 */         String str = param1String.substring(0, i);
+/* 1280 */         bool = "file".equalsIgnoreCase(str);
+/*      */       } else {
+/* 1282 */         bool = true;
+/*      */       } 
+/* 1284 */       return bool ? new URL(param1URL, param1String) : null;
+/*      */     }
+/*      */     
+/*      */     static URL tryResolveNonFile(URL param1URL, String param1String) throws MalformedURLException {
+/* 1295 */       String str = param1String.replace(File.separatorChar, '/');
+/* 1296 */       if (isRelative(str)) {
+/* 1297 */         URL uRL = new URL(param1URL, str);
+/* 1298 */         String str1 = param1URL.getPath();
+/* 1299 */         String str2 = uRL.getPath();
+/* 1300 */         int i = str1.lastIndexOf('/');
+/* 1301 */         if (i == -1)
+/* 1302 */           i = str1.length() - 1; 
+/* 1304 */         if (str2.regionMatches(0, str1, 0, i + 1) && str2
+/* 1305 */           .indexOf("..", i) == -1)
+/* 1306 */           return uRL; 
+/*      */       } 
+/* 1309 */       return null;
+/*      */     }
+/*      */     
+/*      */     static boolean isRelative(String param1String) {
 /*      */       try {
-/* 1254 */         if (!URI.create(str).isAbsolute()) {
-/* 1255 */           URL uRL = new URL(param1URL, str);
-/* 1256 */           if (param1URL.getProtocol().equalsIgnoreCase("file"))
-/* 1257 */             return uRL; 
-/* 1259 */           String str1 = param1URL.getPath();
-/* 1260 */           String str2 = uRL.getPath();
-/* 1261 */           int i = str1.lastIndexOf('/');
-/* 1262 */           if (i == -1)
-/* 1263 */             i = str1.length() - 1; 
-/* 1265 */           if (str2.regionMatches(0, str1, 0, i + 1) && str2
-/* 1266 */             .indexOf("..", i) == -1)
-/* 1267 */             return uRL; 
-/*      */         } 
-/* 1271 */       } catch (MalformedURLException|IllegalArgumentException malformedURLException) {}
-/* 1272 */       if (URLClassPath.DEBUG_CP_URL_CHECK)
-/* 1273 */         System.err.println("Class-Path entry: \"" + param1String + "\" ignored in JAR file " + param1URL); 
-/* 1275 */       return null;
+/* 1317 */         return !URI.create(param1String).isAbsolute();
+/* 1318 */       } catch (IllegalArgumentException illegalArgumentException) {
+/* 1319 */         return false;
+/*      */       } 
 /*      */     }
 /*      */   }
 /*      */   
@@ -887,69 +910,69 @@
 /*      */     private File dir;
 /*      */     
 /*      */     FileLoader(URL param1URL) throws IOException {
-/* 1288 */       super(param1URL);
-/* 1289 */       if (!"file".equals(param1URL.getProtocol()))
-/* 1290 */         throw new IllegalArgumentException("url"); 
-/* 1292 */       String str = param1URL.getFile().replace('/', File.separatorChar);
-/* 1293 */       str = ParseUtil.decode(str);
-/* 1294 */       this.dir = (new File(str)).getCanonicalFile();
+/* 1333 */       super(param1URL);
+/* 1334 */       if (!"file".equals(param1URL.getProtocol()))
+/* 1335 */         throw new IllegalArgumentException("url"); 
+/* 1337 */       String str = param1URL.getFile().replace('/', File.separatorChar);
+/* 1338 */       str = ParseUtil.decode(str);
+/* 1339 */       this.dir = (new File(str)).getCanonicalFile();
 /*      */     }
 /*      */     
 /*      */     URL findResource(String param1String, boolean param1Boolean) {
-/* 1301 */       Resource resource = getResource(param1String, param1Boolean);
-/* 1302 */       if (resource != null)
-/* 1303 */         return resource.getURL(); 
-/* 1305 */       return null;
+/* 1346 */       Resource resource = getResource(param1String, param1Boolean);
+/* 1347 */       if (resource != null)
+/* 1348 */         return resource.getURL(); 
+/* 1350 */       return null;
 /*      */     }
 /*      */     
 /*      */     Resource getResource(final String name, boolean param1Boolean) {
 /*      */       try {
 /*      */         final File file;
-/* 1311 */         URL uRL2 = new URL(getBaseURL(), ".");
-/* 1312 */         final URL url = new URL(getBaseURL(), ParseUtil.encodePath(name, false));
-/* 1314 */         if (!uRL1.getFile().startsWith(uRL2.getFile()))
-/* 1316 */           return null; 
-/* 1319 */         if (param1Boolean)
-/* 1320 */           URLClassPath.check(uRL1); 
-/* 1323 */         if (name.indexOf("..") != -1) {
-/* 1325 */           file = (new File(this.dir, name.replace('/', File.separatorChar))).getCanonicalFile();
-/* 1326 */           if (!file.getPath().startsWith(this.dir.getPath()))
-/* 1328 */             return null; 
+/* 1356 */         URL uRL2 = new URL(getBaseURL(), ".");
+/* 1357 */         final URL url = new URL(getBaseURL(), ParseUtil.encodePath(name, false));
+/* 1359 */         if (!uRL1.getFile().startsWith(uRL2.getFile()))
+/* 1361 */           return null; 
+/* 1364 */         if (param1Boolean)
+/* 1365 */           URLClassPath.check(uRL1); 
+/* 1368 */         if (name.indexOf("..") != -1) {
+/* 1370 */           file = (new File(this.dir, name.replace('/', File.separatorChar))).getCanonicalFile();
+/* 1371 */           if (!file.getPath().startsWith(this.dir.getPath()))
+/* 1373 */             return null; 
 /*      */         } else {
-/* 1331 */           file = new File(this.dir, name.replace('/', File.separatorChar));
+/* 1376 */           file = new File(this.dir, name.replace('/', File.separatorChar));
 /*      */         } 
-/* 1334 */         if (file.exists())
-/* 1335 */           return new Resource() {
+/* 1379 */         if (file.exists())
+/* 1380 */           return new Resource() {
 /*      */               public String getName() {
-/* 1336 */                 return name;
+/* 1381 */                 return name;
 /*      */               }
 /*      */               
 /*      */               public URL getURL() {
-/* 1337 */                 return url;
+/* 1382 */                 return url;
 /*      */               }
 /*      */               
 /*      */               public URL getCodeSourceURL() {
-/* 1338 */                 return URLClassPath.FileLoader.this.getBaseURL();
+/* 1383 */                 return URLClassPath.FileLoader.this.getBaseURL();
 /*      */               }
 /*      */               
 /*      */               public InputStream getInputStream() throws IOException {
-/* 1340 */                 return new FileInputStream(file);
+/* 1385 */                 return new FileInputStream(file);
 /*      */               }
 /*      */               
 /*      */               public int getContentLength() throws IOException {
-/* 1342 */                 return (int)file.length();
+/* 1387 */                 return (int)file.length();
 /*      */               }
 /*      */             }; 
-/* 1345 */       } catch (Exception exception) {
-/* 1346 */         return null;
+/* 1390 */       } catch (Exception exception) {
+/* 1391 */         return null;
 /*      */       } 
-/* 1348 */       return null;
+/* 1393 */       return null;
 /*      */     }
 /*      */   }
 /*      */ }
 
 
-/* Location:              /home/houzhizhen/dist/jdk8_211_all/jdk1.8.0_211/jre/lib/rt.jar!/sun/misc/URLClassPath.class
+/* Location:              /home/houzhizhen/software/jdk/jdk1.8.0_301/jre/lib/rt.jar!/sun/misc/URLClassPath.class
  * Java compiler version: 8 (52.0)
  * JD-Core Version:       1.1.3
  */
