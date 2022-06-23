@@ -1,5 +1,8 @@
 package com.baidu.hive.func;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class CPlusUtil {
 
     static {

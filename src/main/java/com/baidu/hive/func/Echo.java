@@ -6,7 +6,7 @@ import org.apache.hadoop.hive.ql.exec.UDF;
 
 public class Echo extends UDF {
 
-    static final private Log LOG = LogFactory.getLog(Echo.class.getName());
+    private final static   Log LOG = LogFactory.getLog(Echo.class.getName());
 
     public int evaluate(int a) {
         LOG.info(String.valueOf(a));
