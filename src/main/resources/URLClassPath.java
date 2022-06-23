@@ -495,11 +495,11 @@
          if (param1Boolean)
            URLClassPath.check(uRL); 
          uRLConnection = uRL.openConnection();
-         InputStream inputStream = uRLConnection.getInputStream();
          if (uRLConnection instanceof JarURLConnection) {
            JarURLConnection jarURLConnection = (JarURLConnection)uRLConnection;
            this.jarfile = URLClassPath.JarLoader.checkJar(jarURLConnection.getJarFile());
          } 
+         InputStream inputStream = uRLConnection.getInputStream();
        } catch (Exception exception) {
          return null;
        } 
@@ -846,11 +846,14 @@
        byte b = 0;
        while (stringTokenizer.hasMoreTokens()) {
          String str = stringTokenizer.nextToken();
-         URL uRL = URLClassPath.DISABLE_CP_URL_CHECK ? new URL(param1URL, str) : safeResolve(param1URL, str);
+         URL uRL = URLClassPath.DISABLE_CP_URL_CHECK ? new URL(param1URL, str) : tryResolve(param1URL, str);
          if (uRL != null) {
            arrayOfURL[b] = uRL;
            b++;
+           continue;
          } 
+         if (URLClassPath.DEBUG_CP_URL_CHECK)
+           System.err.println("Class-Path entry: \"" + str + "\" ignored in JAR file " + param1URL); 
        } 
        if (b == 0) {
          arrayOfURL = null;
@@ -860,26 +863,46 @@
        return arrayOfURL;
      }
      
-     static URL safeResolve(URL param1URL, String param1String) {
+     static URL tryResolve(URL param1URL, String param1String) throws MalformedURLException {
+       if ("file".equalsIgnoreCase(param1URL.getProtocol()))
+         return tryResolveFile(param1URL, param1String); 
+       return tryResolveNonFile(param1URL, param1String);
+     }
+     
+     static URL tryResolveFile(URL param1URL, String param1String) throws MalformedURLException {
+       boolean bool;
+       int i = param1String.indexOf(':');
+       if (i >= 0) {
+         String str = param1String.substring(0, i);
+         bool = "file".equalsIgnoreCase(str);
+       } else {
+         bool = true;
+       } 
+       return bool ? new URL(param1URL, param1String) : null;
+     }
+     
+     static URL tryResolveNonFile(URL param1URL, String param1String) throws MalformedURLException {
        String str = param1String.replace(File.separatorChar, '/');
-       try {
-         if (!URI.create(str).isAbsolute()) {
-           URL uRL = new URL(param1URL, str);
-           if (param1URL.getProtocol().equalsIgnoreCase("file"))
-             return uRL; 
-           String str1 = param1URL.getPath();
-           String str2 = uRL.getPath();
-           int i = str1.lastIndexOf('/');
-           if (i == -1)
-             i = str1.length() - 1; 
-           if (str2.regionMatches(0, str1, 0, i + 1) && str2
-             .indexOf("..", i) == -1)
-             return uRL; 
-         } 
-       } catch (MalformedURLException|IllegalArgumentException malformedURLException) {}
-       if (URLClassPath.DEBUG_CP_URL_CHECK)
-         System.err.println("Class-Path entry: \"" + param1String + "\" ignored in JAR file " + param1URL); 
+       if (isRelative(str)) {
+         URL uRL = new URL(param1URL, str);
+         String str1 = param1URL.getPath();
+         String str2 = uRL.getPath();
+         int i = str1.lastIndexOf('/');
+         if (i == -1)
+           i = str1.length() - 1; 
+         if (str2.regionMatches(0, str1, 0, i + 1) && str2
+           .indexOf("..", i) == -1)
+           return uRL; 
+       } 
        return null;
+     }
+     
+     static boolean isRelative(String param1String) {
+       try {
+         return !URI.create(param1String).isAbsolute();
+       } catch (IllegalArgumentException illegalArgumentException) {
+         return false;
+       } 
      }
    }
    
@@ -947,3 +970,4 @@
      }
    }
  }
+
