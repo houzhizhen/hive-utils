@@ -1,0 +1,22 @@
+#!/bin/bash
+# Monitor the TOTAL_MEMORY_BYTES, and compare with the specified limit, if more than limit, restart hiveserver.
+# The program runs on user hive.
+cd $(dirname $0);pwd
+#HIVE_SERVER_MEMORY_LIMIT=30G
+export HIVE_SERVER_MEMORY_LIMIT=30000000000
+
+DELETE_LOGFILE=`date -d "-30 day" +"%Y%m%d"`
+rm -rf ${DELETE_LOGFILE}*
+
+MONITOR_LOGFILE=`date +"%Y%m%d-%H%M%S"`-hive-server-monitor_on_user_hive.log
+
+export TOTAL_MEMORY_BYTES=`sh hive-server-memory-bytes.sh`
+echo TOTAL_MEMORY_BYTES=${TOTAL_MEMORY_BYTES} >> ${MONITOR_LOGFILE}
+
+if [ $TOTAL_MEMORY_BYTES -gt ${HIVE_SERVER_MEMORY_LIMIT} ]; then
+  echo TOTAL_MEMORY_BYTES:${TOTAL_MEMORY_BYTES} more than HIVE_SERVER_MEMORY_LIMIT:${HIVE_SERVER_MEMORY_LIMIT} >> ${MONITOR_LOGFILE}
+  echo STARTING HIVESERVER >> ${MONITOR_LOGFILE}
+  sh restart-hiveserver.sh
+else
+	echo ${TOTAL_MEMORY_BYTES}  no more than LIMIT:${HIVE_SERVER_MEMORY_LIMIT} >> ${MONITOR_LOGFILE}
+fi
