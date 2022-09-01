@@ -1,53 +1,35 @@
 package com.baidu.hive.metastore;
 
-import org.apache.hadoop.fs.Path;
+import com.baidu.hive.util.HiveTestUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.RetryingMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.thrift.TException;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class MultiTimesMetaStoreConnectTest {
 
+    private static final String METASTORE_CLIENT_CLASS = "hive.metastore.client.class";  //  The name of the class that implementing the IMetaStoreClient interface.
+    private static final String METASTORE_CLIENT_CLASS_DEFAULT = "org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient";
+
+    private static final String METASTORE_CONNECTION_COUNT = "metastore.connection.count";
+    private static final int METASTORE_CONNECTION_COUNT_DEFAULT = 10;
     public static void main(String[] args) throws HiveException, TException, InterruptedException {
         HiveConf hiveConf = new HiveConf();
-        for (String arg : args) {
-            File file = new File(arg);
-            if (file.exists()) {
-                System.out.println("Add resource " + arg);
-                hiveConf.addResource(new Path(arg));
-            }
-        }
+        HiveTestUtils.addResource(hiveConf, args);
+        HiveTestUtils.printHiveConfByKeyOrder(hiveConf);
 
-        List<String> keys = new ArrayList<>(hiveConf.size());
-        for (Map.Entry<String, String> p : hiveConf) {
-            keys.add(p.getKey());
-        }
-        Collections.sort(keys);
-        System.out.println("All conf begin");
-        for (String key : keys) {
-            System.out.println(key + ":" + hiveConf.get(key));
-        }
-        System.out.println("All conf end");
-        System.out.println("");
-
-        int times = 10;
+        int times = hiveConf.getInt(METASTORE_CONNECTION_COUNT, METASTORE_CONNECTION_COUNT_DEFAULT);
         List<IMetaStoreClient> metaStoreClientList = new ArrayList<>(times);
         for (int i = 0; i < times; i++) {
-            IMetaStoreClient metaStoreClient = RetryingMetaStoreClient.getProxy(hiveConf, false);
+            IMetaStoreClient metaStoreClient = MetaStoreUtil.createMetaStoreClient(hiveConf);
             metaStoreClientList.add(metaStoreClient);
-            List<String> databases = metaStoreClient.getAllDatabases();
-            System.out.println("All databases");
-            for (String db : databases) {
-                System.out.println(db);
-            }
         }
         System.out.println("Loop");
         for (int i = 0; i < times; i++) {
@@ -61,7 +43,9 @@ public class MultiTimesMetaStoreConnectTest {
             metaStoreClient.close();
         }
         System.out.println("Finished");
-        System.out.println("Enter sleep");
-        TimeUnit.SECONDS.sleep(60 * 60);
+
+        long sleepSecond = 60L * 60L;
+        System.out.println("Enter sleep, sleepSecond=" + sleepSecond);
+        TimeUnit.SECONDS.sleep(sleepSecond);
     }
 }
