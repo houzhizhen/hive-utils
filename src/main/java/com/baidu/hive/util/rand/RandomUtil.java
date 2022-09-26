@@ -11,7 +11,7 @@ public class RandomUtil {
 
     public static String randomString(int length) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < length; i++) {
+        for (long i = 0; i < length; i++) {
             sb.append(ALL_CARACTERS.charAt(random.nextInt(ALL_CARACTERS.length())));
         }
         return sb.toString();

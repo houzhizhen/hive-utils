@@ -20,11 +20,21 @@ public class HiveTestUtils {
         if (args == null) {
             return;
         }
-        for (String arg : args) {
-            File file = new File(arg);
-            if (file.exists()) {
-                System.out.println("Add resource " + arg);
-                hiveConf.addResource(new Path(arg));
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if ("-hiveconf".equals(arg) || "--hiveconf".equals(arg) && i < args.length - 1) {
+                String keyValue = args[i + 1];
+                int index = keyValue.indexOf("=");
+                if (index != -1 && index != keyValue.length() - 1) {
+                    hiveConf.set(keyValue.substring(0, index), keyValue.substring(index + 1));
+                }
+                i++;
+            } else {
+                File file = new File(arg);
+                if (file.exists()) {
+                    System.out.println("Add resource " + arg);
+                    hiveConf.addResource(new Path(arg));
+                }
             }
         }
     }
