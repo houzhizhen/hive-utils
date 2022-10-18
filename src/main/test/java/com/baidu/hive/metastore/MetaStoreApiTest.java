@@ -1,15 +1,20 @@
 package com.baidu.hive.metastore;
 
-import com.baidu.hive.util.Assert;
 import com.baidu.hive.util.HiveTestUtils;
 import com.baidu.hive.util.log.LogUtil;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.PrincipalType;
+import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.thrift.TException;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,42 +30,43 @@ public class MetaStoreApiTest {
 
     private String catalogLocation;
 
-    private HiveConf hiveConf;
+    private Configuration conf;
     private IMetaStoreClient client;
 
-    public MetaStoreApiTest(HiveConf hiveConf) {
-        this.hiveConf = hiveConf;
-        // Disable txn
-        this.hiveConf.set(HiveConf.ConfVars.HIVE_TXN_MANAGER.varname, "org.apache.hadoop.hive.ql.lockmgr.DummyTxnManager");
-        this.hiveConf.setBoolVar(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY, HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.defaultBoolVal);
-        LogUtil.logParameter(hiveConf, HiveConf.ConfVars.HIVE_TXN_MANAGER.varname);
-        LogUtil.logParameter(hiveConf, HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname);
-        this.catalogLocation = this.hiveConf.get(CATALOG_LOCATION_KEY, CATALOG_LOCATION_DEFAULT);
-    }
-
-    public static void main(String[] args) throws TException {
-        HiveConf hiveConf = new HiveConf();
-        HiveTestUtils.addResource(hiveConf, args);
-        // HiveTestUtils.printHiveConfByKeyOrder(hiveConf);
-
-        MetaStoreApiTest test = new MetaStoreApiTest(hiveConf);
-        test.init();
-        // test.testDatabase();
-        test.testTable();
-        test.close();
-    }
-
+    @Before
     public void init() throws MetaException {
-        this.client = MetaStoreUtil.createMetaStoreClient(this.hiveConf);
-        LogUtil.log("MetaStoreApiTest init");
+        this.conf = MetastoreConf.newMetastoreConf();;
+        // Disable txn
+        this.conf.set(HiveConf.ConfVars.HIVE_TXN_MANAGER.varname,
+                "org.apache.hadoop.hive.ql.lockmgr.DummyTxnManager");
+        MetastoreConf.setBoolVar(conf, MetastoreConf.ConfVars.HIVE_SUPPORT_CONCURRENCY,
+                HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.defaultBoolVal);
+        LogUtil.logParameter(conf, HiveConf.ConfVars.HIVE_TXN_MANAGER.varname);
+        LogUtil.logParameter(conf, HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname);
+        this.catalogLocation = this.conf.get(CATALOG_LOCATION_KEY, CATALOG_LOCATION_DEFAULT);
+        this.client = MetaStoreUtil.createMetaStoreClient(this.conf);
     }
+//
+//    public static void main(String[] args) throws TException {
+//        HiveConf hiveConf = new HiveConf();
+//        HiveTestUtils.addResource(hiveConf, args);
+//        // HiveTestUtils.printHiveConfByKeyOrder(hiveConf);
+//
+//        MetaStoreApiTest test = new MetaStoreApiTest(hiveConf);
+//        test.init();
+//        // test.testDatabase();
+//        test.testTable();
+//        test.close();
+//    }
 
+    @After
     public void close() {
         this.client.close();
         LogUtil.log("MetaStoreApiTest closed");
     }
 
-    private void testDatabase() throws TException {
+    @Test
+    public void testDatabase() throws TException {
         String[] dbArray = new String[] {"meta_test11", "meta_test12"};
 
         for (int i = 0; i < dbArray.length; i++) {
@@ -85,14 +91,16 @@ public class MetaStoreApiTest {
         }
     }
 
-    private void testTable() {
-        // createTableInDefaultDatabase();
+    public void testTable() {
+        createTableInDefaultDatabase();
     }
 
     /**
      * args: [Table(tableName:t2,
-     * dbName:default, owner:houzhizhen,
-     * createTime:1661331824, lastAccessTime:0,
+     * dbName:default,
+     * owner:houzhizhen,
+     * createTime:1661331824,
+     * lastAccessTime:0,
      * retention:0,
      * sd:StorageDescriptor(cols:[FieldSchema(name:c1, type:string, comment:null)],
      * location:null,
@@ -113,6 +121,9 @@ public class MetaStoreApiTest {
         Table table = new Table();
         table.setDbName(dbName);
         table.setTableName(tbName);
+        table.setOwner("houzhizhen");
+        table.setCreateTime(1661331824);
+        table.setLastAccessTime(0);
         //client.createTable(table);
     }
 

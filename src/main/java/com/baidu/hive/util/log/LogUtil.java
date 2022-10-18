@@ -1,5 +1,6 @@
 package com.baidu.hive.util.log;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import java.text.SimpleDateFormat;
@@ -13,7 +14,7 @@ public class LogUtil {
         }
     }
 
-    public static void logParameter(HiveConf hiveConf, String parameterName) {
+    public static void logParameter(Configuration hiveConf, String parameterName) {
         log(parameterName + "=" + hiveConf.get(parameterName));
     }
 }
