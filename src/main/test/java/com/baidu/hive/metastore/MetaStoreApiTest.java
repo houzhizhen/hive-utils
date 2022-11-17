@@ -1,6 +1,5 @@
 package com.baidu.hive.metastore;
 
-import com.baidu.hive.util.HiveTestUtils;
 import com.baidu.hive.util.log.LogUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -91,41 +90,6 @@ public class MetaStoreApiTest {
         }
     }
 
-    public void testTable() {
-        createTableInDefaultDatabase();
-    }
-
-    /**
-     * args: [Table(tableName:t2,
-     * dbName:default,
-     * owner:houzhizhen,
-     * createTime:1661331824,
-     * lastAccessTime:0,
-     * retention:0,
-     * sd:StorageDescriptor(cols:[FieldSchema(name:c1, type:string, comment:null)],
-     * location:null,
-     * inputFormat:org.apache.hadoop.hive.ql.io.orc.OrcInputFormat,
-     * outputFormat:org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat,
-     * compressed:false,
-     * numBuckets:-1,
-     * serdeInfo:SerDeInfo(name:null, serializationLib:org.apache.hadoop.hive.ql.io.orc.OrcSerde,
-     * parameters:{serialization.format=1}),
-     * bucketCols:[], sortCols:[], parameters:{},
-     * skewedInfo:SkewedInfo(skewedColNames:[], skewedColValues:[], skewedColValueLocationMaps:{}),
-     * storedAsSubDirectories:false),
-     * partitionKeys:[],
-     * parameters:{totalSize=0, numRows=0, rawDataSize=0,
-     * COLUMN_STATS_ACCURATE={"BASIC_STATS":"true","COLUMN_STATS":{"c1":"true"}}, numFiles=0, bucketing_version=2}, viewOriginalText:null, viewExpandedText:null, tableType:MANAGED_TABLE, privileges:PrincipalPrivilegeSet(userPrivileges:{houzhizhen=[PrivilegeGrantInfo(privilege:INSERT, createTime:-1, grantor:houzhizhen, grantorType:USER, grantOption:true), PrivilegeGrantInfo(privilege:SELECT, createTime:-1, grantor:houzhizhen, grantorType:USER, grantOption:true), PrivilegeGrantInfo(privilege:UPDATE, createTime:-1, grantor:houzhizhen, grantorType:USER, grantOption:true), PrivilegeGrantInfo(privilege:DELETE, createTime:-1, grantor:houzhizhen, grantorType:USER, grantOption:true)]}, groupPrivileges:null, rolePrivileges:null), temporary:false, catName:hive, ownerType:USER)
-     */
-    private void createTableInDefaultDatabase(String dbName, String tbName) {
-        Table table = new Table();
-        table.setDbName(dbName);
-        table.setTableName(tbName);
-        table.setOwner("houzhizhen");
-        table.setCreateTime(1661331824);
-        table.setLastAccessTime(0);
-        //client.createTable(table);
-    }
 
     private void createDatabase(String dbName) throws TException {
         String location = this.catalogLocation + "/" + dbName + ".db";
