@@ -1,84 +1,72 @@
 package com.baidu.hive.security.token;
 
+import com.baidu.hive.util.HiveTestUtils;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStore;
 import org.apache.hadoop.hive.metastore.RawStore;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.security.DelegationTokenIdentifier;
 import org.apache.hadoop.hive.metastore.security.TokenStoreDelegationTokenSecretManager;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager.DelegationTokenInformation;
 import org.apache.hadoop.security.token.delegation.MetastoreDelegationTokenSupport;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 /**
- * public boolean addToken(DelegationTokenIdentifier tokenIdentifier,
- *       DelegationTokenInformation token) throws TokenStoreException {
- *
- *     try {
- *       String identifier = TokenStoreDelegationTokenSecretManager.encodeWritable(tokenIdentifier);
- *       String tokenStr = Base64.encodeBase64URLSafeString(
- *         MetastoreDelegationTokenSupport.encodeDelegationTokenInformation(token));
- *       boolean result = (Boolean)invokeOnTokenStore("addToken", new Object[] {identifier, tokenStr},
- *         String.class, String.class);
- *       LOG.trace("addToken: tokenIdentifier = {}, added = {}", tokenIdentifier, result);
- *       return result;
- *     } catch (IOException e) {
- *       throw new TokenStoreException(e);
- *     }
- *   }
+ * Reference @code{addToken#org.apache.hadoop.hive.metastore.security.DBTokenStore}
  */
 public class ReadAllTokensFromStore {
 
+    private static SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+
     public static void main(String[] args) throws MetaException, IOException {
-
-
-        SimpleDateFormat format = new SimpleDateFormat("YYYY-MM-dd-HH-mm-ss");
-        File tokenIdenFile = new File("tokenIden-" + format.format(new Date()) + ".txt");
-        File tokenInfoFile = new File("tokenInfo-" + format.format(new Date()) + ".txt");
+        SimpleDateFormat fileNameFormat = new SimpleDateFormat("YYYY-MM-dd-HH-mm-ss");
+        File tokenIdenFile = new File("hive-metastore-delegation-token-" + fileNameFormat.format(new Date()) + ".txt");
         PrintWriter tokenIdenWriter = new PrintWriter(new BufferedWriter(new FileWriter(tokenIdenFile)));
-        PrintWriter tokenInfoWriter = new PrintWriter(new BufferedWriter(new FileWriter(tokenInfoFile)));
-        System.out.println(tokenIdenFile.getAbsolutePath());
+        System.out.println("output file: " + tokenIdenFile.getAbsolutePath());
         HiveConf conf = new HiveConf();
+        HiveTestUtils.addResource(conf, args);
         try {
             RawStore store = HiveMetaStore.HMSHandler.getMSForConf(conf);
-            List<String> tokenIdentifiers = store.getAllTokenIdentifiers();
-            System.out.println("get tokens with size:" + tokenIdentifiers.size());
-            DelegationTokenIdentifier identifier = new DelegationTokenIdentifier();
-            for (String identifierStr : tokenIdentifiers) {
-                String tokenStr = store.getToken(identifierStr);
-                TokenStoreDelegationTokenSecretManager.decodeWritable(identifier, tokenStr);
+            List<String> tokenIdentifierStrList = store.getAllTokenIdentifiers();
+            System.out.println("get tokens with size:" + tokenIdentifierStrList.size());
 
-                DelegationTokenInformation tokenInformation =
-                        MetastoreDelegationTokenSupport.decodeDelegationTokenInformation(Base64.decodeBase64(tokenStr));
-                
-                writeTokenIden(identifier, tokenIdenWriter);
-                writeTokenInfo(tokenInformation, tokenInfoWriter);
+            for (String identifierStr : tokenIdentifierStrList) {
+                DelegationTokenIdentifier tokenIdentifier = getDelegationTokenIdentifier(identifierStr);
+                tokenIdenWriter.println(getTokenIdentifierStr(tokenIdentifier));
             }
         } finally {
             tokenIdenWriter.close();
-            tokenInfoWriter.close();
         }
     }
 
-    private static void writeTokenInfo(DelegationTokenInformation tokenInformation,
-                                       PrintWriter tokenInfoWriter) {
+    protected static DelegationTokenIdentifier getDelegationTokenIdentifier(String identifierStr) throws IOException {
+        DelegationTokenIdentifier identifier = new DelegationTokenIdentifier();
+        DataInputStream in = new DataInputStream(new ByteArrayInputStream(
+                Base64.decodeBase64(identifierStr.getBytes(StandardCharsets.US_ASCII))));
+        identifier.readFields(in);
+        return identifier;
     }
 
-    private static void writeTokenIden(DelegationTokenIdentifier identifier, PrintWriter tokenIdenWriter) {
-        StringBuilder sb = new StringBuilder();
-        tokenIdenWriter.write("masterkey:");
-        tokenIdenWriter.write(identifier.getMasterKeyId());
-        tokenIdenWriter.write("\n");
-
-        tokenIdenWriter.write("Kind:");
-        tokenIdenWriter.write(identifier.getKind().toString());
-        tokenIdenWriter.write("\n");
-
+    public static String getTokenIdentifierStr(DelegationTokenIdentifier identifier) {
+        StringBuilder buffer = new StringBuilder();
+        buffer.append(identifier.getKind())
+              .append(", owner=").append(identifier.getOwner())
+              .append(", renewer=").append(identifier.getRenewer())
+              .append(", realUser=").append(identifier.getRealUser())
+              .append(", issueDate=").append(format.format(identifier.getIssueDate()))
+              .append(", maxDate=").append(format.format(identifier.getMaxDate()))
+              .append(", sequenceNumber=").append(identifier.getSequenceNumber())
+              .append(", masterKeyId=").append(identifier.getMasterKeyId());
+        return buffer.toString();
     }
-
 }
