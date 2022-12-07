@@ -1,9 +1,11 @@
 package com.baidu.hive.util.generator;
 
 import com.baidu.hive.driver.DriverBase;
+import com.baidu.hive.util.HiveTestUtils;
 import com.baidu.hive.util.log.LogUtil;
 import com.baidu.hive.util.rand.RandomUtil;
 import com.google.common.base.Preconditions;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -62,7 +64,11 @@ public class TableDataGenerator extends DriverBase {
         }
         PrintWriter printWriter = new PrintWriter(new BufferedWriter(new FileWriter(this.fileName)));
         for (long i = 0; i < this.size; i++) {
-            for (FieldSchema schema : fieldSchemas) {
+            for (int col = 0; col < fieldSchemas.size(); col++) {
+                FieldSchema schema = fieldSchemas.get(col);
+                if (col != 0) {
+                    printWriter.print(delimiter);
+                }
                 if (serdeConstants.STRING_TYPE_NAME.equals(schema.getType())) {
                     printWriter.print(RandomUtil.randomString(10));
                 } else if (serdeConstants.DOUBLE_TYPE_NAME.equals(schema.getType())) {
@@ -78,7 +84,8 @@ public class TableDataGenerator extends DriverBase {
                     String msg = "Cannot random for field " + schema.getName() + " with type " + schema.getType();
                     throw new RuntimeException(msg);
                 }
-                printWriter.print(delimiter);
+
+
             }
             printWriter.println();
         }
@@ -86,23 +93,19 @@ public class TableDataGenerator extends DriverBase {
     }
 
     public static void main(String [] args) throws HiveException, IOException {
-        // args = new String[]{"test", "t2", "t2", "10"};
-        LogUtil.log("Parameters.length:" + args.length);
-        for (int i = 0; i < args.length; i++) {
-            LogUtil.log("parameter[" + i + "]:" + args[0]);
-        }
-        if (args.length != 4) {
-            LogUtil.log("Parameters: database name, table name, file name, size");
-            System.exit(1);
-        }
-        String dbName = args[0];
-        String tbName = args[1];
-        String fileName = args[2];
-        long size = Long.parseLong(args[3]);
+
+        HiveConf conf = new HiveConf();
+        HiveTestUtils.addResource(conf, args);
+
+        String dbName = conf.get("hive.generator.db-name");
+        String tbName = conf.get("hive.generator.table-name");
+        String fileName = conf.get("hive.generator.file-name");
+        long size = conf.getLong("hive.generator.size", 100L);
         LogUtil.log("TableDataGenerate parameters ",
                     "dbName:" + dbName,
                     "tbName:" + tbName,
-                    "fileName:" + fileName);
+                    "fileName:" + fileName,
+                    "size:" + size);
         TableDataGenerator generator = new TableDataGenerator(dbName, tbName, fileName, size);
         generator.generate();
     }
