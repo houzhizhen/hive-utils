@@ -63,29 +63,50 @@ public class TableDataGenerator extends DriverBase {
             System.exit(1);
         }
         PrintWriter printWriter = new PrintWriter(new BufferedWriter(new FileWriter(this.fileName)));
+        String[] colTypes = new String[fieldSchemas.size()];
+        int[] precisions = new int[fieldSchemas.size()];
+        int[] scales = new int[fieldSchemas.size()];
+        for (int col = 0; col < fieldSchemas.size(); col++) {
+            FieldSchema schema = fieldSchemas.get(col);
+            String colType = schema.getType();
+            int leftBraceIndex = colType.indexOf('(');
+            if (leftBraceIndex == -1) {
+                colTypes[col] = colType.trim();
+                continue;
+            }
+            colTypes[col] = colType.substring(0, leftBraceIndex);
+            int rightBraceIndex = colType.indexOf(')');
+            String precisionAndScale = colType.substring(leftBraceIndex + 1, rightBraceIndex).trim();
+            int commaIndex = precisionAndScale.indexOf(",");
+            if (commaIndex == -1) {
+                precisions[col] = Integer.parseInt(precisionAndScale);
+            } else {
+                String[] array = precisionAndScale.split(",");
+                precisions[col] = Integer.parseInt(array[0].trim());
+                scales[col] = Integer.parseInt(array[0].trim());
+            }
+
+        }
         for (long i = 0; i < this.size; i++) {
-            for (int col = 0; col < fieldSchemas.size(); col++) {
-                FieldSchema schema = fieldSchemas.get(col);
+            for (int col = 0; col < colTypes.length; col++) {
+                String colType = colTypes[col];
+                int precision = precisions[col];
+                int scale = scales[col];
                 if (col != 0) {
                     printWriter.print(delimiter);
                 }
-                if (serdeConstants.STRING_TYPE_NAME.equals(schema.getType())) {
+                if (serdeConstants.STRING_TYPE_NAME.equals(colType)) {
                     printWriter.print(RandomUtil.randomString(10));
-                } else if (serdeConstants.DOUBLE_TYPE_NAME.equals(schema.getType())) {
+                } if (serdeConstants.CHAR_TYPE_NAME.equals(colType)) {
+                    printWriter.print(RandomUtil.randomString(precision));
+                } else if (serdeConstants.DOUBLE_TYPE_NAME.equals(colType)) {
                     printWriter.print(RandomUtil.randomDouble());
-                } else if (schema.getType().startsWith(serdeConstants.DECIMAL_TYPE_NAME)){
-                    String suffix = schema.getType().substring(serdeConstants.DECIMAL_TYPE_NAME.length());
-                    suffix = suffix.substring(1, suffix.length() - 1);
-                    String[] suffixArray = suffix.split(",");
-                    int scale = Integer.parseInt(suffixArray[0].trim());
-                    int precision =Integer.parseInt(suffixArray[1].trim());;
-                    printWriter.print(RandomUtil.randomDecimal(scale, precision));
+                } else if (serdeConstants.DECIMAL_TYPE_NAME.equals(colType)){
+                    printWriter.print(RandomUtil.randomDecimal(precision, scale));
                 } else {
-                    String msg = "Cannot random for field " + schema.getName() + " with type " + schema.getType();
+                    String msg = "Cannot random for field " + fieldSchemas.get(col).getName() + " with type " + schema.getType();
                     throw new RuntimeException(msg);
                 }
-
-
             }
             printWriter.println();
         }

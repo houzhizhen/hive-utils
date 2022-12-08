@@ -17,7 +17,7 @@ public class RandomUtil {
         return sb.toString();
     }
 
-    public static String randomDecimal(int scale, int precision) {
+    public static String randomDecimal(int precision, int scale) {
         // if scale is 38 and precision is 0, only generate 5 digits.
         int maxScale = scale - precision;
         if (maxScale > 5) {
