@@ -17,8 +17,11 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Generate the data for table with textfile format.
@@ -27,6 +30,10 @@ import java.util.Map;
 public class TableDataGenerator extends DriverBase {
 
     public static final String FIELD_DELIMITER_KEY = "field.delim";
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final int DATE_RANGE = 1000 * 60 * 60 * 24 * 3650;
+    private static final SimpleDateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final int TIMESTAMP_RANGE = 1000 * 60 * 60 * 24 * 3650;
     private final String dbName;
     private final String tbName;
     private final String fileName;
@@ -62,7 +69,7 @@ public class TableDataGenerator extends DriverBase {
             LogUtil.log("Table " + table.getTableName() + " is not textfile");
             System.exit(1);
         }
-        PrintWriter printWriter = new PrintWriter(new BufferedWriter(new FileWriter(this.fileName)));
+        // generate the fields metadata
         String[] colTypes = new String[fieldSchemas.size()];
         int[] precisions = new int[fieldSchemas.size()];
         int[] scales = new int[fieldSchemas.size()];
@@ -85,8 +92,11 @@ public class TableDataGenerator extends DriverBase {
                 precisions[col] = Integer.parseInt(array[0].trim());
                 scales[col] = Integer.parseInt(array[0].trim());
             }
-
         }
+
+        // generate data
+        Random random = new Random(1L);
+        PrintWriter printWriter = new PrintWriter(new BufferedWriter(new FileWriter(this.fileName)));
         for (long i = 0; i < this.size; i++) {
             for (int col = 0; col < colTypes.length; col++) {
                 String colType = colTypes[col];
@@ -95,16 +105,36 @@ public class TableDataGenerator extends DriverBase {
                 if (col != 0) {
                     printWriter.print(delimiter);
                 }
-                if (serdeConstants.STRING_TYPE_NAME.equals(colType)) {
+                if (serdeConstants.BOOLEAN_TYPE_NAME.equals(colType)) {
+                    printWriter.print(random.nextBoolean());
+                } else if (serdeConstants.INT_TYPE_NAME.equals(colType)) {
+                    printWriter.print(random.nextInt());
+                } else if (serdeConstants.BIGINT_TYPE_NAME.equals(colType)) {
+                    printWriter.print(random.nextLong());
+                } else if (serdeConstants.STRING_TYPE_NAME.equals(colType)) {
                     printWriter.print(RandomUtil.randomString(10));
-                } if (serdeConstants.CHAR_TYPE_NAME.equals(colType)) {
-                    printWriter.print(RandomUtil.randomString(precision));
+                } else if (serdeConstants.CHAR_TYPE_NAME.equals(colType)) {
+                    printWriter.print(RandomUtil.randomString(Math.min(precision, 10)));
+                } else if (serdeConstants.VARCHAR_TYPE_NAME.equals(colType)) {
+                    printWriter.print(RandomUtil.randomString(Math.min(precision, 10)));
+                } else if (serdeConstants.FLOAT_TYPE_NAME.equals(colType)) {
+                    printWriter.print(random.nextFloat());
                 } else if (serdeConstants.DOUBLE_TYPE_NAME.equals(colType)) {
-                    printWriter.print(RandomUtil.randomDouble());
+                    printWriter.print(random.nextDouble());
+                } else if (serdeConstants.TINYINT_TYPE_NAME.equals(colType)) {
+                    printWriter.print((byte)random.nextInt(Byte.MAX_VALUE));
+                } else if (serdeConstants.SMALLINT_TYPE_NAME.equals(colType)) {
+                    printWriter.print(random.nextInt(Short.MAX_VALUE));
+                } else if (serdeConstants.DATE_TYPE_NAME.equals(colType)) {
+                    Date date = new Date(System.currentTimeMillis() - random.nextInt(DATE_RANGE));
+                    printWriter.print(DATE_FORMAT.format(date));
+                } else if (serdeConstants.TIMESTAMP_TYPE_NAME.equals(colType)) {
+                    Date date = new Date(System.currentTimeMillis() - random.nextInt(TIMESTAMP_RANGE));
+                    printWriter.print(TIMESTAMP_FORMAT.format(date));
                 } else if (serdeConstants.DECIMAL_TYPE_NAME.equals(colType)){
                     printWriter.print(RandomUtil.randomDecimal(precision, scale));
                 } else {
-                    String msg = "Cannot random for field " + fieldSchemas.get(col).getName() + " with type " + schema.getType();
+                    String msg = "Cannot random for field " + fieldSchemas.get(col).getName() + " with type " + colTypes[col];
                     throw new RuntimeException(msg);
                 }
             }
@@ -129,5 +159,6 @@ public class TableDataGenerator extends DriverBase {
                     "size:" + size);
         TableDataGenerator generator = new TableDataGenerator(dbName, tbName, fileName, size);
         generator.generate();
+        System.exit(0);
     }
 }
