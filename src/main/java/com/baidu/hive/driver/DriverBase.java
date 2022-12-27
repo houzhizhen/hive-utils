@@ -1,6 +1,5 @@
 package com.baidu.hive.driver;
 
-import com.baidu.hive.util.log.LogUtil;
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.common.io.CachingPrintStream;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -10,16 +9,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Map;
 
 public class DriverBase {
 
+    protected HiveConf conf;
+    public DriverBase(HiveConf conf) {
+        this.conf = conf;
+    }
+
     public void createSession() {
-        HiveConf conf = new HiveConf(SessionState.class);
         conf.set("hive.execution.engine", "mr");
-        for (Map.Entry<String, String> entry : conf) {
-            LogUtil.log("key:" + entry.getKey() + ", value:" + entry.getValue());
-        }
+
         CliSessionState ss = new CliSessionState(conf);
         ss.in = System.in;
         try {

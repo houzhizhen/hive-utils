@@ -1,14 +1,9 @@
 package com.baidu.hive.comiple;
 
 import com.baidu.hive.driver.DriverBase;
+import com.baidu.hive.util.HiveTestUtils;
 import com.baidu.hive.util.log.LogUtil;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.hadoop.hive.cli.CliSessionState;
-import org.apache.hadoop.hive.common.io.CachingPrintStream;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.DriverFactory;
 import org.apache.hadoop.hive.ql.IDriver;
@@ -17,7 +12,6 @@ import org.apache.hadoop.io.IOUtils;
 
 import java.io.*;
 import java.util.Arrays;
-import java.util.Map;
 
 public class DriverCompile extends DriverBase {
 
@@ -26,7 +20,9 @@ public class DriverCompile extends DriverBase {
     private final int times;
     private IDriver driver;
 
-    public DriverCompile(String database, String dir, int times) {
+    public DriverCompile(HiveConf conf, String database,
+                         String dir, int times) {
+        super(conf);
         this.database = database;
         this.dir = dir;
         this.times = times;
@@ -49,13 +45,16 @@ public class DriverCompile extends DriverBase {
     private void runInteranl()  {
         File parentFile = new File(dir);
         File[] files = parentFile.listFiles((dir, name) -> name.endsWith(".sql"));
+
         if (files == null) {
             System.out.printf("The directory '%s' does not exist", dir);
             return;
         }
+        Arrays.sort(files);
         for (int i = 0; i < times; i++) {
             LogUtil.log(String.format("Thread=%s, times=%s", Thread.currentThread().getName(), i));
             for (File file : files) {
+                LogUtil.log("compile file:" + file.getName());
                 String str = getSQLFromFile(file);
                 String[] sqls = str.split(";");
                 for (String sql : sqls) {
@@ -75,16 +74,16 @@ public class DriverCompile extends DriverBase {
     }
 
     public static void main(String[] args) {
-        OptionsProcessor optionsProcessor = new OptionsProcessor();
-        CommandLine cli = optionsProcessor.process(args);
-        String database = cli.getOptionValue("database", "tpcds_hdfs_orc_3");
-        String dir = cli.getOptionValue("directory", ".");
-        int iterators = Integer.parseInt(cli.getOptionValue("iterators", "1"));
+        HiveConf hiveConf = new HiveConf();
+        HiveTestUtils.addResource(hiveConf, args);
+        String database = hiveConf.get("database", "tpcds_hdfs_orc_3");
+        String dir = hiveConf.get("path", ".");
+        int iterators = Integer.parseInt(hiveConf.get("iterators", "1"));
 
         System.out.printf("database=%s, dir=%s, iterators=%s%n",
                           database, dir, iterators);
 
-        new DriverCompile(database, dir, iterators).execute();
+        new DriverCompile(hiveConf, database, dir, iterators).execute();
     }
 
     public static String getSQLFromFile(File file) {
@@ -110,42 +109,5 @@ public class DriverCompile extends DriverBase {
             }
         }
         return qsb.toString();
-    }
-
-
-    private static class OptionsProcessor {
-
-        private final Options options = new Options();
-
-        @SuppressWarnings("static-access")
-        private OptionsProcessor() {
-            // -database database
-            options.addOption(OptionBuilder
-                                      .hasArg()
-                                      .withArgName("database")
-                                      .withLongOpt("database")
-                                      .withDescription("Database name")
-                                      .create('d'));
-            options.addOption(OptionBuilder
-                                      .hasArg()
-                                      .withArgName("dir")
-                                      .withLongOpt("directory")
-                                      .withDescription("Specify the directory in which the sql file located")
-                                      .create());
-            options.addOption(OptionBuilder
-                                      .hasArg()
-                                      .withArgName("iterators")
-                                      .withLongOpt("iterators")
-                                      .withDescription("Specify the iterator times to loop compile the files in specified directory.")
-                                      .create("i"));
-        }
-
-        public CommandLine process(String[] args) {
-            try {
-                return new GnuParser().parse(options, args);
-            } catch (ParseException e) {
-                throw new RuntimeException("Can't parse args:" + Arrays.toString(args));
-            }
-        }
     }
 }

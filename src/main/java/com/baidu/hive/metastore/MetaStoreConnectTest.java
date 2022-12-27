@@ -14,7 +14,7 @@ public class MetaStoreConnectTest {
     public static void main(String[] args) throws HiveException, TException {
         HiveConf hiveConf = new HiveConf();
         HiveTestUtils.addResource(hiveConf, args);
-        HiveTestUtils.printHiveConfByKeyOrder(hiveConf);
+        // HiveTestUtils.printHiveConfByKeyOrder(hiveConf);
 
         Hive hive = Hive.get(hiveConf);
         IMetaStoreClient metaStoreClient = hive.getMSC();

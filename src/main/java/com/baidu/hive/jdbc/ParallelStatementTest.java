@@ -1,6 +1,8 @@
 package com.baidu.hive.jdbc;
 
+import com.baidu.hive.util.HiveTestUtils;
 import com.baidu.hive.util.log.LogUtil;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.jdbc.HiveDriver;
 
 import java.sql.Connection;
@@ -15,41 +17,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ParallelStatementTest {
 
     public static void main(String[] args) throws ClassNotFoundException, SQLException, InterruptedException {
-        String hiveUrl = "jdbc:hive2://localhost:10000/default";
-        int times = 1000;
-        String sql = "select echo(1)";
-        String userName = "hive";
-        boolean closeConnection = true;
-        if (args.length >0) {
-            hiveUrl = args[0];
-        }
-        if (args.length > 1) {
-            times = Integer.parseInt(args[1]);
-        }
-        if (args.length > 2) {
-            sql = args[2];
-        }
-        if (args.length > 3) {
-            closeConnection = Boolean.parseBoolean(args[3]);
-        }
-        if (args.length > 4) {
-            userName =args[4];
-        }
+        HiveConf hiveConf = new HiveConf();
+        HiveTestUtils.addResource(hiveConf, args);
+        String defaultHiveUrl = "jdbc:hive2://localhost:10000/default";
+
+
+        String hiveUrl = hiveConf.get("hiveUrl", defaultHiveUrl);
+        int times = hiveConf.getInt("times", 10);
+        String sql = hiveConf.get("sql", "select 1");
+        int parallelism = hiveConf.getInt("parallelism", 2);
+
+        String userName = hiveConf.get("userName", "hive");
         LogUtil.log("Parameters:");
         LogUtil.log("hiveUrl = " + hiveUrl);
         LogUtil.log("times = " + times);
         LogUtil.log("sql = " + sql);
-        LogUtil.log("closeConnection = " + closeConnection);
         LogUtil.log("userName = " + userName);
         Class.forName(HiveDriver.class.getName());
         AtomicBoolean error = new AtomicBoolean(false);
         try {
-            for (int i = 0; i < times; i++) {
-                LogUtil.log("i = " + i);
-                Connection conn = java.sql.DriverManager.getConnection(hiveUrl, userName, "hive");
-                parallelExecute(conn, sql, 1, 1);
-                conn.close();
-            }
+            Connection conn = java.sql.DriverManager.getConnection(hiveUrl, userName, "hive");
+
+            parallelExecute(conn, sql, parallelism, times);
+
+            conn.close();
         } catch(Throwable t) {
             error.set(true);
             t.printStackTrace();
@@ -86,6 +77,6 @@ public class ParallelStatementTest {
             });
         }
         es.shutdownNow();
-        es.awaitTermination(60, TimeUnit.SECONDS);
+        es.awaitTermination(1, TimeUnit.HOURS);
     }
 }

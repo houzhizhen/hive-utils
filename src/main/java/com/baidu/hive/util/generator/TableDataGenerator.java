@@ -39,7 +39,10 @@ public class TableDataGenerator extends DriverBase {
     private final String fileName;
     private final long size;
 
-    public TableDataGenerator(String dbName, String tbName, String fileName, long size) {
+    public TableDataGenerator(HiveConf conf, String dbName,
+                              String tbName, String fileName,
+                              long size) {
+        super(conf);
         Preconditions.checkNotNull(dbName, "The dbName can't be null");
         Preconditions.checkNotNull(tbName, "The tbName can't be null");
         this.dbName = dbName;
@@ -144,7 +147,6 @@ public class TableDataGenerator extends DriverBase {
     }
 
     public static void main(String [] args) throws HiveException, IOException {
-
         HiveConf conf = new HiveConf();
         HiveTestUtils.addResource(conf, args);
 
@@ -157,7 +159,8 @@ public class TableDataGenerator extends DriverBase {
                     "tbName:" + tbName,
                     "fileName:" + fileName,
                     "size:" + size);
-        TableDataGenerator generator = new TableDataGenerator(dbName, tbName, fileName, size);
+        TableDataGenerator generator = new TableDataGenerator(conf, dbName,
+                                                              tbName, fileName, size);
         generator.generate();
         System.exit(0);
     }

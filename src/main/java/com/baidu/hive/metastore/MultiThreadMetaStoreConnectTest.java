@@ -22,7 +22,6 @@ public class MultiThreadMetaStoreConnectTest {
 
         HiveConf hiveConf = new HiveConf();
         HiveTestUtils.addResource(hiveConf, args);
-        HiveTestUtils.printHiveConfByKeyOrder(hiveConf);
 
         int threadCount = hiveConf.getInt(THREAD_COUNT, THREAD_COUNT_DEFAULT);
         int connCount = hiveConf.getInt(METASTORE_CONNECTION_COUNT, METASTORE_CONNECTION_COUNT_DEFAULT);
@@ -53,7 +52,7 @@ public class MultiThreadMetaStoreConnectTest {
             });
 
         }
-        long sleepSecond = 10 * 60L * 60L;
+        long sleepSecond = 60L * 60L;
         es.shutdown();
         boolean success = es.awaitTermination(sleepSecond, TimeUnit.SECONDS);
         System.out.println("Finished, success = " + success);

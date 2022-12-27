@@ -6,17 +6,15 @@ import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.cli.CommandLine;
+import com.baidu.hive.util.HiveTestUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.lib.Node;
@@ -39,11 +37,11 @@ public class GetFunctionsFromSQL {
     private static int SQL_MIN_LENGTH = 5;
 
     public static void main(String[] args) throws IOException, LockException {
-        GetFunctionsOptions options = new GetFunctionsOptions();
-        CommandLine commandLine = options.processOptions(args);
-        String path = commandLine.getOptionValue("path");
-        String suffix = commandLine.getOptionValue("suffix") == null ? "sql"
-                : commandLine.getOptionValue("suffix") ;
+        HiveConf hiveConf = new HiveConf();
+        HiveTestUtils.addResource(hiveConf, args);
+
+        String path = hiveConf.get("path");
+        String suffix = hiveConf.get("suffix", "sql");
         LOG.info(String.format("path='%s', suffix='%s'", path, suffix));
 
         // Map of function to the files the function in.
