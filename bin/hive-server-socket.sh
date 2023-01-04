@@ -7,7 +7,8 @@ cd $(dirname $0);
 DELETE_LOGFILE=`date -d "-30 day" +"%Y%m%d"`
 rm -rf logs/${DELETE_LOGFILE}*
 
-HISTO_LOGFILE=logs/`date +"%Y%m%d-%H%M%S"`-hive-server-socket.log
+LOGFILE=logs/`date +"%Y%m%d-%H%M%S"`-hive-server-socket.log
 HIVESERVER_PID=`ps aux | grep HiveServer | grep -v grep | awk '{print $2}'` 
 
-netstat -tunp | grep ${HIVESERVER_PID} > ${HISTO_LOGFILE}
+echo HIVESERVER_PID=${HIVESERVER_PID}  >> ${LOGFILE}
+netstat -tunp | grep ${HIVESERVER_PID} >> ${LOGFILE} 2>&1

@@ -8,7 +8,7 @@ cd $(dirname $0);
 DELETE_LOGFILE=`date -d "-30 day" +"%Y%m%d"`
 rm -rf logs/${DELETE_LOGFILE}*
 
-HISTO_LOGFILE=logs/`date +"%Y%m%d-%H%M%S"`-hive-server-jstack.log
+LOGFILE=logs/`date +"%Y%m%d-%H%M%S"`-hive-server-jstack.log
 HIVESERVER_PID=`ps aux | grep HiveServer | grep -v grep | awk '{print $2}'` 
-
-/opt/jdk1.8.0_211//bin/jstack ${HIVESERVER_PID} > ${HISTO_LOGFILE}
+echo HIVESERVER_PID=${HIVESERVER_PID}  >> ${LOGFILE}
+/opt/jdk1.8.0_211//bin/jstack ${HIVESERVER_PID} >> ${LOGFILE} 2>&1
