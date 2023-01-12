@@ -179,16 +179,15 @@ metaStoreClient.close();
 ```
 线程结束后，最后等待 1 小时。可以查看当前进程是否和 metastore 有多个未是否的 tpc 连接，或者 jvm 内有未释放的对象。
 
-### 4.8 parallel-jdbc-statement.sh
-多线程同时连接 hive server，执行指定 SQL。
+### 4.8 jdbc-parallel-statement.sh
+创建一个 JDBC 连接，多线程同时使用这个连接，执行指定 SQL，每个线程执行指定次数。
 ```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.ParallelStatementTest \
  --hiveconf hiveUrl=jdbc:hive2://localhost:10000/default;principal=hive/_HOST@BAIDU.COM \
  --hiveconf userName=hive \
  --hiveconf parallelism=2 \
  --hiveconf times=10 \
- --hiveconf 'sql=select 1' \
-
+ --hiveconf 'sql=select 1' 
 ```
 * 参数说明
 hiveUrl: HiveServer 的地址
@@ -197,4 +196,25 @@ parallelism: 线程的数量
 times: 每个线程执行指定 SQL 的次数。
 'sql=select 1'： 执行的SQL 内容，因为 SQL 有空格，所以整个参数用单引号括起来。
 
+线程结束后，最后等待 1 小时。可以查看当前进程是否和 metastore 有多个未是否的 tpc 连接，或者 jvm 内有未释放的对象。
+
+## jdbc-multi-thread-statement-test.sh
+
+和 jdbc-parallel-statement.sh 不同的是：本程序每个线程创建一个 JDBC 连接，执行指定 SQL，每个线程执行指定次数，每次执行之后 SLEEP 一段时间。
+```bash
+hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiThreadStatementTest \
+ --hiveconf hiveUrl=jdbc:hive2://localhost:10000/default \
+ --hiveconf userName=hive \
+ --hiveconf parallelism=2 \
+ --hiveconf times=10 \
+ --hiveconf 'sql=select 1' \
+ --hiveconf sleepSeconds=10
+```
+* 参数说明
+  hiveUrl: HiveServer 的地址
+  userName: 连接 hiveserver 的用户名
+  parallelism: 线程的数量
+  times: 每个线程执行指定 SQL 的次数。
+  'sql=select 1'： 执行的SQL 内容，因为 SQL 有空格，所以整个参数用单引号括起来。
+   sleepSeconds: 每执行一次 SQL, sleep 多长时间。
 线程结束后，最后等待 1 小时。可以查看当前进程是否和 metastore 有多个未是否的 tpc 连接，或者 jvm 内有未释放的对象。
