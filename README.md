@@ -252,7 +252,9 @@ hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiThreadStatemen
  --hiveconf parallelism=2 \
  --hiveconf times=10 \
  --hiveconf 'sql=select 1' \
- --hiveconf sleepSeconds=10
+ --hiveconf sleepSeconds=10 \
+ --hiveconf print-log-each-statement=true \
+ --hiveconf create-connection-each-statement=true
 ```
 * 参数说明
   hiveUrl: HiveServer 的地址
@@ -260,9 +262,10 @@ hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiThreadStatemen
   parallelism: 线程的数量
   times: 每个线程执行指定 SQL 的次数。
   'sql=select 1'： 执行的SQL 内容，因为 SQL 有空格，所以整个参数用单引号括起来。
-   sleepSeconds: 每执行一次 SQL, sleep 多长时间。
-线程结束后，最后等待 1 小时。可以查看当前进程是否和 metastore 有多个未是否的 tpc 连接，或者 jvm 内有未释放的对象。
-
+  sleepSeconds: 每执行一次 SQL, sleep 多长时间。
+  print-log-each-statement: 是否在每个SQL执行之后打印日志
+  create-connection-each-statement: 是否在执行每个 SQL 时单独建立一个 jdbc 连接。如果否，则一个线程一个 jdbc 连接。
+* 
 ## 4.10 multi thread connection at fixed period-test
 
 本程序每隔一段时间，每个线程创建一个 JDBC 连接，执行指定 SQL，执行之后关闭连接。

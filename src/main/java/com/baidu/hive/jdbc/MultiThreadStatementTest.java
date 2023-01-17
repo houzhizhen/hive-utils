@@ -21,6 +21,8 @@ public class MultiThreadStatementTest {
     private static final String SQL_DEFAULT = "select 1";
     private static final int PARALLELISM_DEFAULT = 10;
     private static final String USERNAME_DEFAULT = "hive";
+    private static final boolean CREATE_CONNECTION_EACH_STATEMENT_DEFAULT = true;
+    private static final boolean PRINT_LOG_EACH_STATEMENT_DEFAULT = true;
 
     public static void main(String[] args) throws ClassNotFoundException, SQLException, InterruptedException {
         HiveConf conf = new HiveConf();
@@ -46,14 +48,11 @@ public class MultiThreadStatementTest {
     }
 
     public static void parallelExecute(HiveConf conf, int parallelism, AtomicBoolean error) throws InterruptedException {
-        CountDownLatch countDown = new CountDownLatch(parallelism);
         ExecutorService es = Executors.newFixedThreadPool(parallelism);
         for (int i = 0; i < parallelism; i++) {
             es.submit(() -> {
                 try {
-                    System.out.println("start countdown");
-
-                    execute(conf, error, countDown);
+                    execute(conf, error);
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }
@@ -64,23 +63,36 @@ public class MultiThreadStatementTest {
         LogUtil.log("terminated:" + terminated);
     }
 
-    public static void execute(HiveConf conf, AtomicBoolean error, CountDownLatch countDown) {
+    public static void execute(HiveConf conf, AtomicBoolean error) {
+
+        boolean createConnectionEachStatement = conf.getBoolean("create-connection-each-statement",
+                                                                CREATE_CONNECTION_EACH_STATEMENT_DEFAULT);
+        if (createConnectionEachStatement) {
+            createConnectionEachStatementExecute(conf, error);
+        } else {
+            singleConnectionForAllStatementsExecute(conf, error);
+        }
+
+    }
+    private static void singleConnectionForAllStatementsExecute(HiveConf conf,
+                                                                AtomicBoolean error) {
         String hiveUrl = conf.get("hiveUrl", HIVE_URL_DEFAULT);
         int times = conf.getInt("times", TIMES_DEFAULT);
         String sql = conf.get("sql", SQL_DEFAULT);
         String userName = conf.get("userName", USERNAME_DEFAULT);
-        LogUtil.log("hiveUrl = " + hiveUrl);
-        LogUtil.log("times = " + times);
-        LogUtil.log("sql = " + sql);
-        LogUtil.log("userName = " + userName);
+        boolean isPrintLog = conf.getBoolean("print-log-each-statement",
+                                             PRINT_LOG_EACH_STATEMENT_DEFAULT);
         Connection conn = null;
         try {
+
             conn = java.sql.DriverManager.getConnection(hiveUrl, userName, "hive");
-            countDown.countDown();
-            LogUtil.log("countDown.getCount():" + countDown.getCount());
             Statement st = conn.createStatement();
             for (int j = 0; j < times && !error.get(); j++) {
                 st.executeQuery(sql);
+                if (isPrintLog) {
+                    LogUtil.log("Thread " + Thread.currentThread().getName() +
+                                        " executed " + j + " times");
+                }
             }
             st.close();
         } catch (SQLException e) {
@@ -95,6 +107,44 @@ public class MultiThreadStatementTest {
                 }
             }
         }
-        System.out.println("end countdown");
+    }
+    private static void createConnectionEachStatementExecute(HiveConf conf, AtomicBoolean error) {
+        String hiveUrl = conf.get("hiveUrl", HIVE_URL_DEFAULT);
+        int times = conf.getInt("times", TIMES_DEFAULT);
+        String sql = conf.get("sql", SQL_DEFAULT);
+        String userName = conf.get("userName", USERNAME_DEFAULT);
+        boolean isPrintLog = conf.getBoolean("print-log-each-statement",
+                                             PRINT_LOG_EACH_STATEMENT_DEFAULT);
+        Connection conn = null;
+        try {
+            for (int j = 0; j < times && !error.get(); j++) {
+                conn = java.sql.DriverManager.getConnection(hiveUrl, userName, "hive");
+                Statement st = conn.createStatement();
+                st.executeQuery(sql);
+                if (isPrintLog) {
+                    LogUtil.log("Thread " + Thread.currentThread().getName() +
+                                        " executed " + j + " times");
+                }
+                st.close();
+                try {
+                    conn.close();
+                    conn = null;
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            error.set(true);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
