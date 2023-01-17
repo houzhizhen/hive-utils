@@ -1,5 +1,6 @@
 package com.baidu.hive.util;
 
+import com.baidu.hive.util.log.LogUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 
@@ -26,13 +27,16 @@ public class HiveTestUtils {
                 String keyValue = args[i + 1];
                 int index = keyValue.indexOf("=");
                 if (index != -1 && index != keyValue.length() - 1) {
-                    hiveConf.set(keyValue.substring(0, index), keyValue.substring(index + 1));
+                    String key = keyValue.substring(0, index);
+                    String value = keyValue.substring(index + 1);
+                    hiveConf.set(key, value);
+                    LogUtil.log("parameter: key= " + key + ", value = " + value);
                 }
                 i++;
             } else {
                 File file = new File(arg);
                 if (file.exists()) {
-                    System.out.println("Add resource " + arg);
+                    LogUtil.log("Add resource " + arg);
                     hiveConf.addResource(new Path(arg));
                 }
             }

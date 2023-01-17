@@ -218,3 +218,23 @@ hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiThreadStatemen
   'sql=select 1'： 执行的SQL 内容，因为 SQL 有空格，所以整个参数用单引号括起来。
    sleepSeconds: 每执行一次 SQL, sleep 多长时间。
 线程结束后，最后等待 1 小时。可以查看当前进程是否和 metastore 有多个未是否的 tpc 连接，或者 jvm 内有未释放的对象。
+
+## multi-connection-at-fixed-peroid-test
+
+和 jdbc-multi-thread-statement-test.sh 不同的是：本程序每隔一段时间，每个线程创建一个 JDBC 连接，执行指定 SQL，执行之后关闭连接。
+用于测试以固定的速度和 hive-server建立会话，提交任务到 hive-server上，并且关闭会话。hive-server 的最大承受能力。是否执行速度越来越慢。
+```bash
+hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiConnectionAtFixedPeriodTest \
+ --hiveconf hiveUrl=jdbc:hive2://localhost:10000/default \
+ --hiveconf userName=hive \
+ --hiveconf parallelism=2 \
+ --hiveconf 'sql=select 1' \
+ --hiveconf intervalSeconds=1 
+```
+* 参数说明
+  hiveUrl: HiveServer 的地址
+  userName: 连接 hiveserver 的用户名
+  intervalSeconds: 启动线程的周期。并每隔此周期，输出SQL的平均执行时间。
+  parallelism: 每个周期启动的线程的数量
+  'sql=select 1'： 执行的SQL 内容，因为 SQL 有空格，所以整个参数用单引号括起来。
+  
