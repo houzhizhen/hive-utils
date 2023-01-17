@@ -38,8 +38,53 @@ hive --debug service jar hive-util-0.1.0.jar ${full-class-name} \
 bin 目录有各命令执行脚本
 
 ## 4. 支持命令列表
-### 4.1 数据生成器
-可以为指定数据库中的数据表生成数据。详细信息见 [数据生成器.md](bin/table-data-generator.md)
+### 4.1 ## 生成表数据
+
+可以为指定数据库中的数据表生成数据，数据表的类型必须是 textfile。生成文件到当前目录下。
+### 4.2 生成表数据--示例
+* 创建表
+```sql
+use default;
+drop table if exists generate_table_data_test;
+create table generate_table_data_test (
+ c_boolean boolean,
+ c_int int, 
+ c_bigint bigint, 
+ c_string string, 
+ c_char char(20), 
+ c_varchar varchar(200),
+ c_float float,
+ c_double double, 
+ c_tinyint tinyint, 
+ c_smallint smallint, 
+ c_date date, 
+ c_timestamp timestamp,
+ c_decimal decimal(18,2)) stored as textfile;
+```
+
+* 生成数据到当前目录
+  生成命令如下：
+```bash
+hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.util.generator.TableDataGenerator \
+ --hiveconf hive.generator.db-name=default \
+ --hiveconf hive.generator.table-name=generate_table_data_test \
+ --hiveconf hive.generator.file-name=generate_table_data_test.txt \
+ --hiveconf hive.generator.size=100
+```
+参数说明：
+hive.generator.db-name: 数据库名称
+hive.generator.table-name: 表的名称
+hive.generator.file-name: 数据文件的名称
+hive.generator.size: 生成的记录条数
+
+* 加载数据
+  进入 hive 环境
+```sql
+use default;
+load data local inpath './generate_table_data_test.txt' overwrite into table generate_table_data_test; 
+```
+其他说明:
+字段类型并没有全覆盖，只覆盖了常见的类型。
 
 ### 4.2 监控
 #### 4.2.1 Hive Server 监控
@@ -106,11 +151,10 @@ sh hive-metastore-socket.sh
 打印 hive-metastore 的 socket 连接信息到 logs 目录下的相应的文件中。
 
 
-### 4.3 PartitionGenerator
+### 4.3 Partition Generator
 
 分区表对应的文件生成器，仅能在表目录里生成文件，添加分区后，并不能 select，因为文件内容都是二进制的`0`。
 命令如下：
-参考 partition-generator.sh
 ```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.util.generator.PartitionGenerator \
      -hiveconf base-path=hdfs://localhost:9000/home/disk1/hive/hive-313/tp \
@@ -126,7 +170,7 @@ sub-dirs: 每层目录的数量，中间用`,`分割，和 part-names 的数量�
 files-in-partition: 每个分区的文件数量。
 file-size: 每个分区中文件的大小。
 
-### 4.4 driver-compile.sh 
+### 4.4 compile specified sql files
 编译指定目录下的所有后缀为 '.sql' 的文件。
 ```
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.comiple.DriverCompile \
@@ -140,7 +184,7 @@ path: SQL 的所在目录。
 iterators: 执行次数，如为2，则 directory 下的所有 '.sql' 文件执行 2 次。
 
 
-### 4.5 get-functions-from-sql.sh
+### 4.5 get functions from sql
 编译指定目录下的所有后缀为 '.sql' 的文件。
 ```
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.function.GetFunctionsFromSQL \
@@ -154,13 +198,13 @@ suffix: path 目录下文件的后缀。
 输出出两列，第 1 列是函数名，第 2 列是函数所在的 SQL.
 
 
-### 4.6 metastore-connect-test.sh
+### 4.6 metastore connect test
 Metastore 连接测试，打印所有的数据库。
-```
+```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.metastore.MetaStoreConnectTest 
 ```
 
-### 4.7 multi-thread-metastore-connect-test.sh
+### 4.7 multi thread metastore connect test
 多线程 metastore 连接测试，看 metastore 的多次连接是否能释放。
 ```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.metastore.MultiThreadMetaStoreConnectTest \
@@ -179,7 +223,7 @@ metaStoreClient.close();
 ```
 线程结束后，最后等待 1 小时。可以查看当前进程是否和 metastore 有多个未是否的 tpc 连接，或者 jvm 内有未释放的对象。
 
-### 4.8 jdbc-parallel-statement.sh
+### 4.8 Execute statement parallel through jdbc with a single connection
 创建一个 JDBC 连接，多线程同时使用这个连接，执行指定 SQL，每个线程执行指定次数。
 ```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.ParallelStatementTest \
@@ -198,9 +242,9 @@ times: 每个线程执行指定 SQL 的次数。
 
 线程结束后，最后等待 1 小时。可以查看当前进程是否和 metastore 有多个未是否的 tpc 连接，或者 jvm 内有未释放的对象。
 
-## jdbc-multi-thread-statement-test.sh
+## 4.9 Execute statement parallel through jdbc with a connection for each thread
 
-和 jdbc-parallel-statement.sh 不同的是：本程序每个线程创建一个 JDBC 连接，执行指定 SQL，每个线程执行指定次数，每次执行之后 SLEEP 一段时间。
+和 4.8 不同的是：本程序每个线程创建一个 JDBC 连接，执行指定 SQL，每个线程执行指定次数，每次执行之后 SLEEP 一段时间。
 ```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiThreadStatementTest \
  --hiveconf hiveUrl=jdbc:hive2://localhost:10000/default \
@@ -219,9 +263,9 @@ hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiThreadStatemen
    sleepSeconds: 每执行一次 SQL, sleep 多长时间。
 线程结束后，最后等待 1 小时。可以查看当前进程是否和 metastore 有多个未是否的 tpc 连接，或者 jvm 内有未释放的对象。
 
-## multi-connection-at-fixed-peroid-test
+## 4.10 multi thread connection at fixed period-test
 
-和 jdbc-multi-thread-statement-test.sh 不同的是：本程序每隔一段时间，每个线程创建一个 JDBC 连接，执行指定 SQL，执行之后关闭连接。
+本程序每隔一段时间，每个线程创建一个 JDBC 连接，执行指定 SQL，执行之后关闭连接。
 用于测试以固定的速度和 hive-server建立会话，提交任务到 hive-server上，并且关闭会话。hive-server 的最大承受能力。是否执行速度越来越慢。
 ```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiConnectionAtFixedPeriodTest \
@@ -238,3 +282,27 @@ hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiConnectionAtFi
   parallelism: 每个周期启动的线程的数量
   'sql=select 1'： 执行的SQL 内容，因为 SQL 有空格，所以整个参数用单引号括起来。
   
+## 4.11 MetaStore: 多线程创建并删除数据库测试
+
+每个线程都分配一个序号，第1个为0。那么第1个线程就不断的执行 create database db0;drop database db0。
+然后等待一段时间。在进入循环之前，如果数据库存在，则先删除。用于测试 metastore 的性能。
+```bash
+hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.metastore.MetaStoreCreateAndDropDbTest \
+     --hiveconf metastore.createAndDropDb.count=10 \
+     --hiveconf sleep.seconds.between.operation=10 \
+     --hiveconf thread.count=1
+```
+* 参数说明
+  metastore.createAndDropDb.count: 每个线程执行 create database 和 drop database 的次数。
+  sleep.seconds.between.operation: 每个线程执行 create database 和 drop database 后的等待时间。
+  thread.count: 线程的个数。
+
+## 4.12 monitor-delegation-token.sh
+监控 delegation token 的数量，并且输出从数据库里查询一个 delegation token 的时间，看数据库速度是否正常。
+
+## 4.13 Read All Tokens From MetaStore
+```bash
+hive --service jar hive-util-0.1.0.jar com.baidu.hive.security.token.ReadAllTokensFromStore
+```
+从 MetaStore 里读取所有的 Delegation Token 并且对内容进行解析，然后输出到 以 "hive-metastore-delegation-token-" 开头的本地文件，
+文件名后面是生成的时间信息。
