@@ -309,3 +309,26 @@ hive --service jar hive-util-0.1.0.jar com.baidu.hive.security.token.ReadAllToke
 ```
 从 MetaStore 里读取所有的 Delegation Token 并且对内容进行解析，然后输出到 以 "hive-metastore-delegation-token-" 开头的本地文件，
 文件名后面是生成的时间信息。
+
+## 4.12 monitor-delegation-token.sh
+监控 delegation token 的数量，并且输出从数据库里查询一个 delegation token 的时间，看数据库速度是否正常。
+
+## 4.13 Read All Tokens From MetaStore
+```bash
+hive --service jar hive-util-0.1.0.jar com.baidu.hive.security.token.ReadAllTokensFromStore
+```
+从 MetaStore 里读取所有的 Delegation Token 并且对内容进行解析，然后输出到 以 "hive-metastore-delegation-token-" 开头的本地文件，
+文件名后面是生成的时间信息。
+
+
+## 4.14 ThreadLeakQueryLiftTimeHook 测试线程溢出分析
+[jdk-endorsed](https://github.com/houzhizhen/jdk-endorsed)
+
+hive-site.xml 配置
+```xml
+ <property>
+    <name>hive.query.lifetime.hooks</name>
+    <value>com.baidu.hive.ql.hooks.ThreadLeakQueryLiftTimeHook</value>
+    <description>A comma separated list of hooks which implement QueryLifeTimeHook. These will be triggered before/after query compilation and before/after query execution, in the order specified.Implementations of QueryLifeTimeHookWithParseHooks can also be specified in this list. If they arespecified then they will be invoked in the same places as QueryLifeTimeHooks and will be invoked during pre and post query parsing</description>
+  </property>
+```
