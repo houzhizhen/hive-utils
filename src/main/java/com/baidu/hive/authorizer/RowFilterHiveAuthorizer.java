@@ -1,8 +1,6 @@
 package com.baidu.hive.authorizer;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizer;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
@@ -19,6 +17,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RowFilterHiveAuthorizer implements HiveAuthorizer {
+
+    private final String dbName;
+    private final String tableName;
+    private final String expression;
+
+    public RowFilterHiveAuthorizer(HiveConf conf) {
+        this.dbName = conf.get("rowfilter.db-name", "");
+        this.tableName = conf.get("rowfilter.table-name", "");
+        this.expression = conf.get("rowfilter.expression", "");
+    }
+
     @Override
     public VERSION getVersion() {
         return VERSION.V1;
@@ -105,25 +114,22 @@ public class RowFilterHiveAuthorizer implements HiveAuthorizer {
     }
 
     @Override
-    public List<HivePrivilegeObject> applyRowFilterAndColumnMasking(HiveAuthzContext context,
-                                                                    List<HivePrivilegeObject> privObjs)
-            throws SemanticException {
-        List<HivePrivilegeObject> ret = new ArrayList<HivePrivilegeObject>();
-
-        if(CollectionUtils.isNotEmpty(privObjs)) {
+    public List<HivePrivilegeObject> applyRowFilterAndColumnMasking(
+            HiveAuthzContext context, List<HivePrivilegeObject> privObjs) {
             for (HivePrivilegeObject hiveObj : privObjs) {
                 HivePrivilegeObject.HivePrivilegeObjectType hiveObjType = hiveObj.getType();
 
                 if(hiveObjType == HivePrivilegeObject.HivePrivilegeObjectType.TABLE_OR_VIEW) {
                     String tableName = hiveObj.getObjectName();
-                    if ("dws_trans_bms_mchnt_day6".equals(tableName)) {
-                        hiveObj.setRowFilterExpression(" pt between '2022-01-01' and '2022-03-31'");
+                    if (this.dbName.equals(hiveObj.getDbname()) && this.tableName.equals(tableName)) {
+                        List<HivePrivilegeObject> ret = new ArrayList<>();
+                        hiveObj.setRowFilterExpression(this.expression);
                         ret.add(hiveObj);
+                        return ret;
                     }
                 }
             }
-        }
-        return ret;
+        return privObjs;
     }
 
     @Override

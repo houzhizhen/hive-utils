@@ -332,3 +332,41 @@ hive-site.xml 配置
     <description>A comma separated list of hooks which implement QueryLifeTimeHook. These will be triggered before/after query compilation and before/after query execution, in the order specified.Implementations of QueryLifeTimeHookWithParseHooks can also be specified in this list. If they arespecified then they will be invoked in the same places as QueryLifeTimeHooks and will be invoked during pre and post query parsing</description>
   </property>
 ```
+
+## 4.15 使用配置项的 RowFilter 
+
+### 4.15.1 创建表
+```sql
+create table filter(c1 int, c2 int,c3 int);
+insert into filter values(1,2,3);
+insert into filter values(4,5,6);
+```
+### 4.15.2 hive-site.xml 配置
+仅可以读取 c2 = 2 的记录。
+```xml
+  <property>
+    <name>hive.security.authorization.manager</name>
+    <value>com.baidu.hive.authorizer.RowFilterAuthorizerFactory</value>
+  </property>
+  <property>
+    <name>rowfilter.db-name</name>
+    <value>default</value>
+  </property>
+  <property>
+    <name>rowfilter.table-name</name>
+    <value>filter</value>
+  </property>
+  <property>
+    <name>rowfilter.expression</name>
+    <value>c2 = 2</value>
+  </property>
+```
+### 4.15.3 测试
+仅检索出 `c2 = 2` 的记录，符合预期。
+```sql
+hive> select * from filter;
+OK
+filter.c1 filter.c2 filter.c3
+1 2 3
+Time taken: 0.749 seconds, Fetched: 1 row(s)
+```

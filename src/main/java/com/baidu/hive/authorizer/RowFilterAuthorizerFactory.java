@@ -11,6 +11,6 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveMetastoreClie
 public class RowFilterAuthorizerFactory implements HiveAuthorizerFactory {
     @Override
     public HiveAuthorizer createHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory, HiveConf conf, HiveAuthenticationProvider hiveAuthenticator, HiveAuthzSessionContext ctx) throws HiveAuthzPluginException {
-        return new RowFilterHiveAuthorizer();
+        return new RowFilterHiveAuthorizer(conf);
     }
 }
