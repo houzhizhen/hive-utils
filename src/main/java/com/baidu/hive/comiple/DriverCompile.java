@@ -2,6 +2,7 @@ package com.baidu.hive.comiple;
 
 import com.baidu.hive.driver.DriverBase;
 import com.baidu.hive.util.HiveTestUtils;
+import com.baidu.hive.util.SQLUtils;
 import com.baidu.hive.util.log.LogUtil;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -55,8 +56,7 @@ public class DriverCompile extends DriverBase {
             LogUtil.log(String.format("Thread=%s, times=%s", Thread.currentThread().getName(), i));
             for (File file : files) {
                 LogUtil.log("compile file:" + file.getName());
-                String str = getSQLFromFile(file);
-                String[] sqls = str.split(";");
+                String[] sqls = SQLUtils.getSQLsFromFile(file);
                 for (String sql : sqls) {
                     if (sql.length() < 5) {
                         continue;
@@ -84,30 +84,5 @@ public class DriverCompile extends DriverBase {
                           database, dir, iterators);
 
         new DriverCompile(hiveConf, database, dir, iterators).execute();
-    }
-
-    public static String getSQLFromFile(File file) {
-        BufferedReader bufferReader = null;
-        try {
-            bufferReader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-            return getSQLFromReader(bufferReader);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeStream(bufferReader);
-        }
-    }
-
-    public static String getSQLFromReader(BufferedReader r) throws IOException {
-        String line;
-        StringBuilder qsb = new StringBuilder();
-
-        while ((line = r.readLine()) != null) {
-            // Skipping through comments
-            if (! line.startsWith("--")) {
-                qsb.append(line).append("\n");
-            }
-        }
-        return qsb.toString();
     }
 }

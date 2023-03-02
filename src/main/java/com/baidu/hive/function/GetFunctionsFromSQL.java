@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.baidu.hive.util.HiveTestUtils;
+import com.baidu.hive.util.SQLUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.lib.Node;
@@ -49,7 +50,7 @@ public class GetFunctionsFromSQL {
         File[] sqlFiles = getFileList(path, suffix);
         Context ctx = initContext();
         for (File sqlFile : sqlFiles) {
-            String[] sqls = getSqlFromFile(sqlFile).split(";");
+            String[] sqls = SQLUtils.getSQLsFromFile(sqlFile);
             for (String sql : sqls) {
                 if (sql.length() < SQL_MIN_LENGTH) { // At least 5 characters.
                     continue;
@@ -128,21 +129,6 @@ public class GetFunctionsFromSQL {
                     .append(" |");
             System.out.println(sb.toString());
         }
-    }
-
-    private static String getSqlFromFile(File file)
-            throws IOException {
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                    // Skipping through comments
-                if (! line.startsWith("--")) {
-                    sb.append(line).append("\n");
-                }
-            }
-        }
-        return sb.toString();
     }
 
     private static File[] getFileList(String path, String suffix) {

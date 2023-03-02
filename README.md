@@ -370,3 +370,13 @@ filter.c1 filter.c2 filter.c3
 1 2 3
 Time taken: 0.749 seconds, Fetched: 1 row(s)
 ```
+
+## 4.16 GenerateSchemaFromSql
+```bash
+cp input.sql target
+cd target
+hive --service jar hive-util-0.1.0.jar com.baidu.hive.util.generator.GenerateSchemaFromSql \
+  --hiveconf hive.generator.sql.input.file-name=input.sql \
+  --hiveconf hive.generator.sql.output.file-name=output.sql
+```
+--hiveconf hive.generator.sql.input.file-name=input.sql --hiveconf hive.generator.sql.output.file-name=output.sql
