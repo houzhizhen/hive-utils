@@ -35,10 +35,14 @@ public class HiveConfDiff {
             if (value.equals(defaultConf.get(key))) {
                 continue;
             }
+            if (HiveConf.ConfVars.HIVE_AUTHORIZATION_SQL_STD_AUTH_CONFIG_WHITELIST.varname.equals(key)) {
+                continue;
+            }
             LogUtil.log("Parameter key: " +  key,
                     "default value: " + defaultValue,
                     "current value: " + value,
-                    "description: " + confVar.getDescription().replace("\n",""));
+                    "" +defaultConf.get(key),
+                    "description: " + confVar.getDescription().replace("\n"," "));
 
             LogUtil.log("");
         }
