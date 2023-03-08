@@ -373,6 +373,7 @@ Time taken: 0.749 seconds, Fetched: 1 row(s)
 
 ## 4.16 HiveConfDiff
 输出 Hive 变更的配置项。
+
 ```bash
 hive --service jar hive-util-0.1.0.jar com.baidu.hive.conf.HiveConfDiff 
 ```
@@ -387,20 +388,7 @@ hive --service jar hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff \
   --hiveconf conf.files=hive-site.xml
 ```
 
-* hdfs-default.xml 和 hdfs-site.xml 值不一样的配置项。
-```bash
-hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff   --hiveconf conf.default-files=hdfs-default.xml   --hiveconf conf.files=hdfs-site.xml
-```
-* yarn-default.xml 和 yarn-site.xml 值不一样的配置项。
-```bash
-hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff   --hiveconf conf.default-files=yarn-default.xml   --hiveconf conf.files=yarn-site.xml
-```
-* 所有hive 配置文件值不一样的配置项。
-```bash
-hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff   --hiveconf conf.default-files=hive-default.xml,hivemetastore-default.xml,hiveserver2-default.xml   --hiveconf conf.files=hive-site.xml,hivemetastore-site.xml,hive-server2-site.xml
-```
-
-## 4.16 GenerateSchemaFromSql(Not completed)
+## 4.18 GenerateSchemaFromSql(Not completed)
 ```bash
 cp input.sql target
 cd target
