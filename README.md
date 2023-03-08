@@ -371,7 +371,31 @@ filter.c1 filter.c2 filter.c3
 Time taken: 0.749 seconds, Fetched: 1 row(s)
 ```
 
-## 4.16 GenerateSchemaFromSql
+
+## 4.16 ConfDiff
+```bash
+hive --service jar hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff \
+  --hiveconf conf.default-files=hive-default.xml \
+  --hiveconf conf.files=hive-site.xml
+```
+
+```bash
+hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff   --hiveconf conf.default-files=hdfs-default.xml   --hiveconf conf.files=hdfs-site.xml
+```
+```bash
+hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff   --hiveconf conf.default-files=yarn-default.xml   --hiveconf conf.files=yarn-site.xml
+```
+
+```bash
+hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff   --hiveconf conf.default-files=hive-default.xml,hivemetastore-default.xml,hiveserver2-default.xml   --hiveconf conf.files=hive-site.xml,hivemetastore-site.xml,hive-server2-site.xml
+```
+
+## 4.17 HiveConfDiff
+```bash
+hive --service jar hive-util-0.1.0.jar com.baidu.hive.conf.HiveConfDiff 
+```
+
+## 4.16 GenerateSchemaFromSql(Not completed)
 ```bash
 cp input.sql target
 cd target

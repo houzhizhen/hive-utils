@@ -30,7 +30,7 @@ public class HiveTestUtils {
                     String key = keyValue.substring(0, index);
                     String value = keyValue.substring(index + 1);
                     hiveConf.set(key, value);
-                    LogUtil.log("parameter: key= " + key + ", value = " + value);
+                    LogUtil.log("parameter: key = " + key + ", value = " + value);
                 }
                 i++;
             } else {
