@@ -381,19 +381,41 @@ hive --service jar hive-util-0.1.0.jar com.baidu.hive.conf.HiveConfDiff
 ## 4.17 ConfDiff
 比较两组文件值不一样的配置项。conf.default-files是默认值，可以有多个,中间用','分割。
 
-* hive-default.xml 和 hive-site.xml 值不一样的配置项。
 ```bash
-hive --service jar hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff \
-  --hiveconf conf.default-files=hive-default.xml \
-  --hiveconf conf.files=hive-site.xml
+hive --service jar hive-util-0.1.0.jar com.baidu.hive.conf.HiveConfDiff 
 ```
 
-## 4.18 GenerateSchemaFromSql(Not completed)
+```bash
+hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff  \
+ --hiveconf conf.default-files=hdfs-default.xml   \
+ --hiveconf conf.files=hdfs-site.xml
+```
+```bash
+hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff  \
+ --hiveconf conf.default-files=yarn-default.xml   \
+ --hiveconf conf.files=yarn-site.xml
+```
+
+```bash
+hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff  \
+ --hiveconf conf.default-files=hive-default.xml,hivemetastore-default.xml,hiveserver2-default.xml \
+ --hiveconf conf.files=hive-site.xml,hivemetastore-site.xml,hive-server2-site.xml
+```
+
+## 4.18 MultiThreadLongTimeTest
+```bash
+hive --service jar hive-util-0.1.0.jar com.baidu.hive.metastore.MultiThreadLongTimeTest  \
+ --hiveconf thread.count=100 \
+ --hiveconf metastore.api.exec.count.per-thread=1000000 \
+ --hiveconf metastore.api.log.every.n-calls=1000
+```
+
+## 4.19 GenerateSchemaFromSql(Not completed)
 ```bash
 cp input.sql target
 cd target
 hive --service jar hive-util-0.1.0.jar com.baidu.hive.util.generator.GenerateSchemaFromSql \
   --hiveconf hive.generator.sql.input.file-name=input.sql \
   --hiveconf hive.generator.sql.output.file-name=output.sql
-```
 --hiveconf hive.generator.sql.input.file-name=input.sql --hiveconf hive.generator.sql.output.file-name=output.sql
+
