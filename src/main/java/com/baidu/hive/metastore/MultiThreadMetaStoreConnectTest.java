@@ -17,6 +17,8 @@ public class MultiThreadMetaStoreConnectTest {
     private static final int THREAD_COUNT_DEFAULT = 20;
     private static final String METASTORE_CONNECTION_COUNT = "metastore.connection.count";
     private static final int METASTORE_CONNECTION_COUNT_DEFAULT = 100;
+    private static final String METASTORE_API_LOG_EVERY_N_CALLS = "metastore.api.log.every.n-calls";
+    private static final int METASTORE_API_LOG_EVERY_N_CALLS_DEFAULT = 1000;
 
     public static void main(String[] args) throws HiveException, TException, InterruptedException {
 
@@ -25,6 +27,7 @@ public class MultiThreadMetaStoreConnectTest {
 
         int threadCount = hiveConf.getInt(THREAD_COUNT, THREAD_COUNT_DEFAULT);
         int connCount = hiveConf.getInt(METASTORE_CONNECTION_COUNT, METASTORE_CONNECTION_COUNT_DEFAULT);
+        int logEevryNCalls = hiveConf.getInt(METASTORE_API_LOG_EVERY_N_CALLS, METASTORE_API_LOG_EVERY_N_CALLS_DEFAULT);
         ExecutorService es = Executors.newFixedThreadPool(threadCount);
         AtomicInteger finishThreadCount = new AtomicInteger(0);
         for (int i = 0; i < threadCount; i++) {
@@ -39,7 +42,9 @@ public class MultiThreadMetaStoreConnectTest {
                         e.printStackTrace();
                     } finally {
                         long time = System.currentTimeMillis() - beginTime;
-                        System.out.println("Thread " + Thread.currentThread().getId() + ", connect " + c + " takes " + time + " ms");
+                        if (c % logEevryNCalls == 0) {
+                            System.out.println("Thread " + Thread.currentThread().getId() + ", connect " + c + " takes " + time + " ms");
+                        }
                     }
                     try {
                         TimeUnit.SECONDS.sleep(1);

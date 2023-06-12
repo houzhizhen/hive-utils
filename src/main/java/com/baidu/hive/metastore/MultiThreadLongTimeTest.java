@@ -40,7 +40,8 @@ public class MultiThreadLongTimeTest {
                         metaStoreClient.getAllDatabases();
                         if (execIndex % logEevryNCalls == 0) {
                             System.out.println("Thread " + Thread.currentThread().getId() +
-                                    ", called " + execIndex + " times");
+                                                       ", called " + execIndex + " times, takes " +
+                                                       (System.currentTimeMillis() - beginTime) + " ms");
                         }
                     }
                     metaStoreClient.close();
