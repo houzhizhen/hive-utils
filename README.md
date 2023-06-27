@@ -419,3 +419,25 @@ hive --service jar hive-util-0.1.0.jar com.baidu.hive.util.generator.GenerateSch
   --hiveconf hive.generator.sql.output.file-name=output.sql
 --hiveconf hive.generator.sql.input.file-name=input.sql --hiveconf hive.generator.sql.output.file-name=output.sql
 
+## 4.19 AddIn Persistent Function
+```bash
+hadoop fs -put hive-util-0.1.0.jar /user/hive/hive-util-0.1.0.jar;
+```
+hive 执行
+```sql
+create function add_int as 'com.baidu.hive.func.AddInt' using jar 'hdfs://bmr-master-8905dd3:8020//user/hive/hive-util-0.1.0.jar';
+hive> desc function extended add_int;
+OK
+There is no documentation for function 'add_int'
+Function class:com.baidu.hive.func.AddInt
+Function type:PERSISTENT
+Resource:hdfs://bmr-master-8905dd3:8020//user/hive/hive-util-0.1.0.jar
+Time taken: 0.27 seconds, Fetched: 4 row(s)
+hive> select add_int(1);
+2
+```
+
+## 4.10 HiveMetastoreConfPrint
+```
+hive --service jar hive-util-0.1.0.jar com.baidu.hive.conf.HiveMetastoreConfPrint
+```
