@@ -437,7 +437,12 @@ hive> select add_int(1);
 2
 ```
 
-## 4.10 HiveMetastoreConfPrint
+## 4.20 HiveMetastoreConfPrint
 ```
 hive --service jar hive-util-0.1.0.jar com.baidu.hive.conf.HiveMetastoreConfPrint
+```
+## 4.21 PrintAstOfSql--把SQL 解析为抽象语法树，并打印输出
+```
+hive --service jar hive-util-0.1.0.jar com.baidu.hive.comiple.PrintAstOfSql \
+--hiveconf 'hive.sql=select distinct(c1) from (select 1 c1)t'
 ```
