@@ -449,5 +449,39 @@ hive --service jar hive-util-0.1.0.jar com.baidu.hive.comiple.PrintAstOfSql \
 
 ## 4.21 CountApplications
 ```bash
-hive --service jar hive-util-0.1.0.jar com.baidu.java.json
+hive --service jar hive-util-0.1.0.jar com.baidu.java.json.CountApplications /Users/houzhizhen/git/hive-utils/apps
 ```
+
+## 4.22 CompareHistoFile
+```bash
+hive --service jar hive-util-0.1.0.jar \
+com.baidu.java.jdk.CompareHistoFile \
+/Users/houzhizhen/Documents/2023/yinshang/20230721/master2/20230721-141502-hive-server-histo-live.log \
+/Users/houzhizhen/Documents/2023/yinshang/20230721/master2/20230721-151529-hive-server-histo-live.log
+```
+输出内容如下：
+```bash
+compare by size:
+[C : 35471169376
+[Ljava.lang.Object; : 958692040
+org.apache.calcite.rex.RexCall : 892796784
+com.google.common.collect.RegularImmutableList : 709257360
+java.lang.String : 591558368
+org.apache.calcite.rex.RexInputRef : 151330080
+com.google.common.collect.SingletonImmutableList : 27737440
+java.util.HashMap$Node : 15832320
+java.util.Hashtable$Entry : 13398816
+java.util.concurrent.ConcurrentHashMap$Node : 10901760
+compare by ratio:
+org.apache.calcite.rex.RexCall : 232500
+org.apache.calcite.rex.RexInputRef : 29465
+com.google.common.collect.RegularImmutableList : 452
+org.codehaus.commons.compiler.Location : 256
+org.apache.calcite.util.graph.DefaultEdge : 209
+org.apache.calcite.plan.hep.HepRelVertex : 196
+com.google.common.collect.SingletonImmutableList : 190
+org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter : 186
+org.apache.calcite.runtime.FlatLists$Flat2List : 134
+org.apache.calcite.plan.RelTraitSet$Cache : 131
+```
+分为两个部分，第1部分是compare by size:，是第2个文件中占用的字节数减第1个文件中文件的字节数，取前10名。
