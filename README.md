@@ -485,3 +485,16 @@ org.apache.calcite.runtime.FlatLists$Flat2List : 134
 org.apache.calcite.plan.RelTraitSet$Cache : 131
 ```
 分为两个部分，第1部分是compare by size:，是第2个文件中占用的字节数减第1个文件中文件的字节数，取前10名。
+
+## DirectMoveTask
+模拟以下SQL的最后一个阶段从分布式文件系统下载文件到本地。
+```sql
+insert overwrite local directory '/home/hive/out' select * from hzz1.t1;
+```
+执行名：
+```bash
+ hive --service jar hive-util-0.1.0.jar \
+  com.baidu.hive.task.DirectMoveTask \
+  --hiveconf hive.move.task.source.path=bos://spark-data-bd/houzhizhen/warehouse/hzz1.db/t1 \
+  --hiveconf hive.move.task.dest.path=/home/hive/out
+```
