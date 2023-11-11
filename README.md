@@ -272,11 +272,11 @@ hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiThreadStatemen
 用于测试以固定的速度和 hive-server建立会话，提交任务到 hive-server上，并且关闭会话。hive-server 的最大承受能力。是否执行速度越来越慢。
 ```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiConnectionAtFixedPeriodTest \
- --hiveconf hiveUrl=jdbc:hive2://localhost:10000/default \
+ --hiveconf hiveUrl=jdbc:hive2://localhost:10000/default?socketTimeout=100000 \
  --hiveconf userName=hive \
- --hiveconf parallelism=2 \
+ --hiveconf parallelism=100 \
  --hiveconf 'sql=select 1' \
- --hiveconf intervalSeconds=1 
+ --hiveconf intervalSeconds=10
 ```
 * 参数说明
   hiveUrl: HiveServer 的地址
@@ -403,6 +403,7 @@ hive --service jar target/hive-util-0.1.0.jar com.baidu.hive.conf.ConfDiff  \
 ```
 
 ## 4.18 MultiThreadLongTimeTest
+MetaStore 性能测试，多个线程，每个线程执行一定数量的api请求。
 ```bash
 hive --service jar hive-util-0.1.0.jar com.baidu.hive.metastore.MultiThreadLongTimeTest  \
  --hiveconf thread.count=100 \
@@ -453,6 +454,7 @@ hive --service jar hive-util-0.1.0.jar com.baidu.java.json.CountApplications /Us
 ```
 
 ## 4.22 CompareHistoFile
+比较两个JVM histo 文件，找出相差最大的那些。
 ```bash
 hive --service jar hive-util-0.1.0.jar \
 com.baidu.java.jdk.CompareHistoFile \
@@ -486,7 +488,7 @@ org.apache.calcite.plan.RelTraitSet$Cache : 131
 ```
 分为两个部分，第1部分是compare by size:，是第2个文件中占用的字节数减第1个文件中文件的字节数，取前10名。
 
-## DirectMoveTask
+## 4.23 DirectMoveTask
 模拟以下SQL的最后一个阶段从分布式文件系统下载文件到本地。
 ```sql
 insert overwrite local directory '/home/hive/out' select * from hzz1.t1;
@@ -497,4 +499,39 @@ insert overwrite local directory '/home/hive/out' select * from hzz1.t1;
   com.baidu.hive.task.DirectMoveTask \
   --hiveconf hive.move.task.source.path=bos://spark-data-bd/houzhizhen/warehouse/hzz1.db/t1 \
   --hiveconf hive.move.task.dest.path=/home/hive/out
+```
+
+## 4.24 Socket backlog 测试
+
+当 backlog为1， 300 为 300 时，很快Client 就会抛出以下异常。
+```
+```
+执行 `dmesg | grep SYN`，显示结果如下：
+```bash
+[106121.811847] TCP: request_sock_TCP: Possible SYN flooding on port 8081. Sending cookies.  Check SNMP counters.
+```
+* Server 启动命令
+```bash
+hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.ServerBacklogTest  --hiveconf hive.server.backlog.count=1  --hiveconf hive.server.listener.port=8081
+```
+参数说明
+```bash
+hive.server.backlog.count: 监听端口的 backlog 的数量
+hive.server.listener.port: 监听的端口
+```
+* Client 启动命令
+```bash
+hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.ClientBacklogTest \
+ --hiveconf hive.server.ip=localhost \
+ --hiveconf hive.server.port=8081 \
+ --hiveconf parallelism=300 \
+ --hiveconf intervalSeconds=1
+```
+
+参数说明
+```bash
+hive.server.ip: Server 启动的IP
+hive.server.port: Server 监听的端口
+parallelism： 同时执行连接的线程数量
+intervalSeconds: 每个批次的间隔时间
 ```
