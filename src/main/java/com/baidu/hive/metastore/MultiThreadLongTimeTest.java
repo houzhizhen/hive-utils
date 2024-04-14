@@ -48,9 +48,10 @@ public class MultiThreadLongTimeTest {
                 } catch (TException e) {
                     e.printStackTrace();
                 } finally {
-                    long time = System.currentTimeMillis() - beginTime;
-                    System.out.println("Thread " + Thread.currentThread().getId() + ", connect  takes " + time + " ms");
+
                 }
+                long time = System.currentTimeMillis() - beginTime;
+                System.out.println("Thread " + Thread.currentThread().getId() + ", connect  takes " + time + " ms");
                 System.out.println("Thread " + Thread.currentThread().getId() +
                         " finished, finished thread count: " + finishThreadCount.incrementAndGet());
             });

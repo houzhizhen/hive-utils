@@ -157,10 +157,10 @@ sh hive-metastore-socket.sh
 命令如下：
 ```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.util.generator.PartitionGenerator \
-     -hiveconf base-path=hdfs://localhost:9000/home/disk1/hive/hive-313/tp \
+     -hiveconf base-path=hdfs://master-ae5140e:8020/user/hive/temp/ \
      -hiveconf part-names=dt,hour \
-     -hiveconf sub-dirs=3,2 \
-     -hiveconf files-in-partition=2 \
+     -hiveconf sub-dirs=5,24 \
+     -hiveconf files-in-partition=100 \
      -hiveconf file-size=1024
 ```
 * 参数说明
@@ -209,11 +209,38 @@ hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.metastore.MetaStoreConne
 ```bash
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.metastore.MultiThreadMetaStoreConnectTest \
      --hiveconf metastore.connection.count=20 \
-     --hiveconf thread.count=2
+     --hiveconf thread.count=2 \
+     --conf metastore.api.log.every.n-calls=10 \
+     --hiveconf thread.sleep-time-ms.every-call=1000
 ```
 * 参数说明
 metastore.connection.count: 每个线程执行 metastore 连接的数量
 thread.count: 线程的数量
+metastore.api.log.every.n-calls=10: 每个线程执行多少次连接 metastore 操作就打印一次日志，如10，代表每 10 次连接  metastore 操作就打印一次日志。
+thread.sleep-time-ms.every-call: 每个线程执行一次连接 hivemetastore 操作就 sleep 的时间(单位:ms)，大于 0 时有效。
+
+metastore 连接执行以下操作：
+```java
+IMetaStoreClient metaStoreClient = MetaStoreUtil.createMetaStoreClient(hiveConf);
+metaStoreClient.getAllDatabases();
+metaStoreClient.close();
+```
+线程结束后，最后等待 1 小时。可以查看当前进程是否和 metastore 有多个未是否的 tpc 连接，或者 jvm 内有未释放的对象。
+
+### 4.7.1 multi thread metastore loop api test
+多线程 metastore 连接测试，每个线程不断执行 getAllDatabases 操作。和 4.7 multi thread metastore connect test 不同，此测试每个线程仅建立一次连接。
+```bash
+hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.metastore.MultiThreadMetaStoreLoopAPITest \
+     --hiveconf thread.count=2 \
+     --hiveconf metastore.api.loop.count=200 \
+     --conf metastore.api.log.every.n-calls=10 \
+     --hiveconf thread.sleep-time-ms.every-call=1000
+```
+* 参数说明
+thread.count: 线程的数量
+metastore.api.loop.count: 每个线程调用 getAllDatabases 操作的次数。
+metastore.api.log.every.n-calls=10: 每调用多少次 getAllDatabases 操作就打印一次日志。
+thread.sleep-time-ms.every-call: 每个线程执行一次连接 hivemetastore 操作就 sleep 的时间(单位:ms)，大于 0 时有效。
 
 metastore 连接执行以下操作：
 ```java
