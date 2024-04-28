@@ -1,6 +1,7 @@
 package com.baidu.java.jdk;
 
-import org.apache.tez.common.Preconditions;
+import com.baidu.hive.util.HiveTestUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,12 +20,9 @@ public class CompareHistoFile {
     final private File histoFile2;
 
     public CompareHistoFile(File histoFile1, File histoFile2) {
-        Preconditions.checkArgument(histoFile1.exists(), "Histogram file does not exist: %s", histoFile1.getAbsolutePath());
-        Preconditions.checkArgument(histoFile2.exists(), "Histogram file does not exist: %s", histoFile2.getAbsolutePath());
         this.histoFile1 = histoFile1;
         this.histoFile2 = histoFile2;
     }
-
 
     private void compare() {
         Map<String, Long> map1 = readHistoFile(histoFile1);
@@ -94,13 +92,20 @@ public class CompareHistoFile {
     }
 
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.out.println("Usage: java CompareHistoFile <filename> <filename>");
-            System.exit(-1);
-        }
+        HiveConf hiveConf = new HiveConf();
+        HiveTestUtils.addResource(hiveConf, args);
 
-        File histoFile1 = new File(args[0]);
-        File histoFile2 = new File(args[1]);
+
+        File histoFile1 = new File(hiveConf.get("histo-file1"));
+        File histoFile2 = new File(hiveConf.get("histo-file2"));
+        if (!histoFile1.exists()) {
+            System.out.println("add parameter --conf histo-file1=xxx");
+            System.exit(1);
+        }
+        if (!histoFile2.exists()) {
+            System.out.println("add parameter --conf histo-file2=xxx");
+            System.exit(1);
+        }
         CompareHistoFile compare = new CompareHistoFile(histoFile1, histoFile2);
         compare.compare();
     }

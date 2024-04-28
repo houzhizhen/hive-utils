@@ -485,8 +485,8 @@ hive --service jar hive-util-0.1.0.jar com.baidu.java.json.CountApplications /Us
 ```bash
 hive --service jar hive-util-0.1.0.jar \
 com.baidu.java.jdk.CompareHistoFile \
-/Users/houzhizhen/Documents/2023/yinshang/20230721/master2/20230721-141502-hive-server-histo-live.log \
-/Users/houzhizhen/Documents/2023/yinshang/20230721/master2/20230721-151529-hive-server-histo-live.log
+--hiveconf histo-file1=./20230721-141502-hive-server-histo-live.log \
+--hiveconf histo-file2=./20230721-151529-hive-server-histo-live.log
 ```
 输出内容如下：
 ```bash
