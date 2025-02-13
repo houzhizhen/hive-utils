@@ -27,7 +27,7 @@ public class Echo extends UDF {
         return a;
     }
 
-    public Object evalueate(Object o) {
+    public Object evaluate(Object o) {
         return o;
     }
 }

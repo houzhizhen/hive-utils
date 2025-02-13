@@ -13,14 +13,14 @@ hive service jar hive-util-0.1.0.jar ${full-class-name}
 * 参数
 以下示例设置 2 个参数
 ```bash
-hive service jar hive-util-0.1.0.jar ${full-class-name} \
+hive --service jar hive-util-0.1.0.jar ${full-class-name} \
 --hiveconf para1=value1 \
 --hiveconf para2=value2 
 ```
 * 指定参数文件
 以下示例指定2个参数和一个配置文件。
 ```bash
-hive service jar hive-util-0.1.0.jar ${full-class-name} \
+hive --service jar hive-util-0.1.0.jar ${full-class-name} \
 --hiveconf para1=value1 \
 --hiveconf para2=value2 \
 /etc/tez/conf/tez-site.xml
@@ -276,8 +276,8 @@ times: 每个线程执行指定 SQL 的次数。
 hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiThreadStatementTest \
  --hiveconf hiveUrl=jdbc:hive2://localhost:10000/default \
  --hiveconf userName=hive \
- --hiveconf parallelism=2 \
- --hiveconf times=10 \
+ --hiveconf parallelism=1 \
+ --hiveconf times=1 \
  --hiveconf 'sql=select 1' \
  --hiveconf sleepSeconds=10 \
  --hiveconf print-log-each-statement=true \
@@ -561,4 +561,33 @@ hive.server.ip: Server 启动的IP
 hive.server.port: Server 监听的端口
 parallelism： 同时执行连接的线程数量
 intervalSeconds: 每个批次的间隔时间
+```
+
+## 4.25 不断执行自定义函数 Echo 测试
+```bash
+hadoop fs -put hive-util-0.1.0.jar hdfs://bmr-cluster/
+```
+进入 beeline
+```bash
+beeline
+```
+创建函数
+```sql
+create function default.echo as 'com.baidu.hive.func.Echo' using jar 'hdfs://bmr-cluster/hive-util-0.1.0.jar';
+```
+
+```bash
+nohup hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiConnectionAtFixedPeriodTest \
+ --hiveconf hiveUrl=jdbc:hive2://localhost:10000/default?socketTimeout=100000 \
+ --hiveconf userName=hive \
+ --hiveconf parallelism=1 \
+ --hiveconf 'sql=select default.echo(1L)' \
+ --hiveconf intervalSeconds=2 &
+```
+
+## 解析一个目录下所有sql 文件是否能执行
+```
+hive --service jar target/hive-util-0.1.0.jar \
+com.baidu.hive.driver.check.CheckSqlInPath \
+--hiveconf root.dir=file:///Users/houzhizhen/git/hive-utils/all-tasks > log 2>err
 ```
