@@ -57,4 +57,8 @@ public class DriverBase {
             e.printStackTrace();
         }
     }
+
+    public Context getContext() {
+        return ctx;
+    }
 }

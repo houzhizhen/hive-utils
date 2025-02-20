@@ -42,16 +42,46 @@ public class SQLUtils {
         StringBuilder qsb = new StringBuilder();
 
         while ((line = r.readLine()) != null) {
+            line = line.trim();
+            if ("".equals(line)) {
+                continue;
+            }
             // Skipping through comments
             if (! line.startsWith("--")) {
+                int index = line.lastIndexOf("--");
+
+                if (index == 0) {
+                    line = line.substring(0, index);
+                } else if (index > 0 && line.charAt(index - 1) == ' ') {
+                    line = line.substring(0, index);
+                }
                 qsb.append(line).append("\n");
             }
         }
         return qsb.toString();
     }
+
+    public static List<Path> getPathsInFile(String path) throws IOException {
+        BufferedReader reader = null;
+        List<Path> result = new ArrayList<>();
+        try {
+            reader = new BufferedReader(new FileReader(path));
+            String line;
+            while ((line = reader.readLine()) != null) {
+               line = line.trim();
+               result.add(new Path(line));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeStream(reader);
+        }
+
+        return result;
+    }
+
     public static List<Path> getFiles(FileSystem fs, Path path) throws IOException {
         List<Path> result = new ArrayList<>();
-
         Queue<Path> queue = new LinkedList<>();
         queue.add(path);
         while (! queue.isEmpty()) {
@@ -66,13 +96,5 @@ public class SQLUtils {
             }
         }
         return result;
-    }
-
-    public static boolean filterOutSql(String sql) {
-        sql = sql.trim();
-        if(! sql.contains("select")) {
-            return true;
-        }
-        return false;
     }
 }

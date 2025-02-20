@@ -585,9 +585,24 @@ nohup hive --service jar ./hive-util-0.1.0.jar com.baidu.hive.jdbc.MultiConnecti
  --hiveconf intervalSeconds=2 &
 ```
 
-## 解析一个目录下所有sql 文件是否能执行
-```
-hive --service jar target/hive-util-0.1.0.jar \
+## 解析一个目录下所有文件进行分类
+```bash
+hive --service jar hive-util-0.1.0.jar \
 com.baidu.hive.driver.check.CheckSqlInPath \
 --hiveconf root.dir=file:///Users/houzhizhen/git/hive-utils/all-tasks > log 2>err
 ```
+输出文件如下：
+pySparkOut.out：如果一个文件的内容是 python 访问 spark，那么就文件的路径就输出到此文件。
+python.out：如果一个文件的内容是 python，那么就文件的路径就输出到此文件。
+scala.out：如果一个文件的内容是 scala，那么就文件的路径就输出到此文件。
+allSQL.out： 如果一个文件的内容按';'分割后都是sql，那么就文件的路径就输出到此文件。
+partSQL.out: 如果一个文件的内容按';'分割后部分是sql，那么就文件的路径就输出到此文件。
+nosql.out: 如果一个文件的内容按';'分割后都不是sql。
+
+
+参数说明：
+```bash
+root.dir: 解析文件所在的根目录，可以是本地文件，也可以是分布式文件。
+sql.need.parse: sql 是否经过真正的语法树解析？默认是 false。如果经过语法树，可能解析不过，如 date 在 hive-1.2 中不是关键子，在 hive-3.1 中是关键字。
+```
+
